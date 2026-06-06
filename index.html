@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Merricks Globus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fbf8f0; --ink:#23201c; --rule:#23201c;
+    --bg1:#fdfdfb; --bg2:#eef3f6; --ocean:#e9f0f3; --ocean-rim:#cdd9df;
+    --neutral:#dedcd0; --border:#2c2924;
+    --accent:#e2503a; --accent2:#1f8a8a;
+    --shadow:rgba(40,44,52,.18);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:
+     radial-gradient(1.6px 1.6px at 12% 18%,#fff 99%,transparent),
+     radial-gradient(1.4px 1.4px at 78% 12%,#cfe0ff 99%,transparent),
+     radial-gradient(1px 1px at 33% 64%,#fff 99%,transparent),
+     radial-gradient(1px 1px at 64% 46%,#fff 99%,transparent),
+     radial-gradient(1.6px 1.6px at 88% 73%,#fff 99%,transparent),
+     radial-gradient(1px 1px at 22% 83%,#bcd0ff 99%,transparent),
+     radial-gradient(1px 1px at 51% 26%,#fff 99%,transparent),
+     radial-gradient(1px 1px at 8% 50%,#fff 99%,transparent),
+     radial-gradient(1px 1px at 92% 33%,#fff 99%,transparent),
+     radial-gradient(1.5px 1.5px at 44% 90%,#fff 99%,transparent),
+     radial-gradient(1px 1px at 70% 84%,#cfe0ff 99%,transparent),
+     radial-gradient(1px 1px at 60% 7%,#fff 99%,transparent),
+     radial-gradient(1px 1px at 38% 40%,#fff 99%,transparent),
+     radial-gradient(1px 1px at 83% 55%,#fff 99%,transparent),
+     radial-gradient(125% 125% at 50% 0%,#152549 0%,#0b1733 45%,#060d20 100%);}
+  body{font-family:"Spectral",Georgia,serif;color:var(--ink);-webkit-tap-highlight-color:transparent;}
+  /* ---------- Kopf ---------- */
+  header{position:fixed;top:0;left:0;right:0;z-index:20;text-align:center;
+     padding:14px 16px 6px;pointer-events:none;}
+  h1{font-family:"Fraunces","Spectral",Georgia,serif;font-weight:600;margin:0;
+     font-size:clamp(22px,4vw,40px);letter-spacing:.4px;line-height:1.05;
+     color:#eef2ff;text-shadow:0 1px 18px rgba(4,8,20,.55);}
+  header .sub{font-family:"Spectral";font-style:italic;font-size:clamp(12px,1.6vw,15px);
+     color:#9fb0d8;margin-top:4px;}
+  /* ---------- Globus ---------- */
+  #stage{position:fixed;inset:0;display:block;touch-action:none;cursor:grab;}
+  #stage.grabbing{cursor:grabbing}
+  /* ---------- Bedienleiste ---------- */
+  .controls{position:fixed;z-index:20;right:14px;top:14px;display:flex;gap:8px;}
+  .controls button{font-family:"Fredoka",sans-serif;font-weight:600;font-size:13px;
+     border:1.5px solid var(--border);background:var(--paper);color:var(--ink);
+     border-radius:999px;padding:7px 12px;cursor:pointer;box-shadow:0 2px 6px var(--shadow);
+     transition:transform .12s ease,background .12s ease;}
+  .controls button:hover{transform:translateY(-1px);background:#fff}
+  .controls button:active{transform:translateY(0)}
+  .toplink{position:fixed;z-index:20;left:14px;top:14px;font-family:"Fredoka",sans-serif;
+     font-weight:600;font-size:12.5px;text-decoration:none;border:1.5px solid var(--border);
+     background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 12px;
+     box-shadow:0 2px 6px var(--shadow);transition:transform .12s ease,background .12s ease;}
+  .toplink:hover{transform:translateY(-1px);background:#fff}
+  .toplink:active{transform:translateY(0)}
+  .hint{position:fixed;z-index:20;left:14px;bottom:12px;font-size:12.5px;color:#6b6358;
+     background:rgba(251,248,240,.82);border:1px solid #e4ddcf;border-radius:10px;
+     padding:7px 11px;backdrop-filter:blur(3px);max-width:78vw;line-height:1.35;}
+  .hint b{color:var(--ink);font-weight:600}
+  .credits{position:fixed;z-index:20;right:14px;bottom:12px;font-size:11px;color:#9a9183;
+     text-align:right;line-height:1.4;max-width:46vw;}
+  .credits a{color:#857c6e}
+  /* ---------- Ladeanzeige ---------- */
+  #loader{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+     flex-direction:column;gap:16px;background:
+       radial-gradient(125% 125% at 50% 0%,#152549 0%,#0b1733 45%,#060d20 100%);
+     transition:opacity .5s ease;}
+  .spinner{width:46px;height:46px;border-radius:50%;border:4px solid #d9e2e7;
+     border-top-color:var(--accent2);animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loader p{font-family:"Fredoka",sans-serif;color:#aab6d8;font-size:15px;margin:0;text-align:center;padding:0 20px;line-height:1.5}
+  #loadInfo,#loadReady{max-width:540px}
+  #loadReady{display:none;color:#ff6b5e;font-weight:600}
+  .hg{width:80px;height:116px;display:block;margin:6px auto}
+  .hg .glass{fill:none;stroke:#aebbe0;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+  .hg .cap{fill:#aebbe0}
+  .hg .sand{fill:#e9c46a}
+  .hg .sand-top{transform-box:fill-box;transform-origin:50% 100%;animation:hgTop 30s linear forwards}
+  .hg .sand-bot{transform-box:fill-box;transform-origin:50% 100%;animation:hgBot 30s linear forwards}
+  .hg .stream{animation:hgStream 30s linear forwards}
+  @keyframes hgTop{from{transform:scaleY(1)}to{transform:scaleY(0)}}
+  @keyframes hgBot{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes hgStream{0%,3%{opacity:0}6%{opacity:1}94%{opacity:1}100%{opacity:0}}
+  #goBtn{display:none;margin-top:10px;border:none;cursor:pointer;
+     background:#1f9d57;color:#fff;font-family:"Fredoka",sans-serif;font-size:16px;font-weight:600;
+     padding:12px 28px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  #goBtn:hover{background:#23b365}
+  /* ---------- Zeitung ---------- */
+  #paperWrap{position:fixed;inset:0;z-index:40;display:none;align-items:flex-start;
+     justify-content:center;overflow:auto;padding:28px 16px 48px;
+     background:rgba(28,30,36,.46);backdrop-filter:blur(2px);}
+  #paperWrap.show{display:flex;animation:fadein .35s ease}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  .sheet{position:relative;width:min(940px,100%);background:var(--paper);
+     box-shadow:0 24px 70px rgba(15,18,25,.45);border-radius:3px;
+     padding:30px clamp(20px,4vw,52px) 40px;
+     background-image:radial-gradient(circle at 12% 8%, rgba(0,0,0,.018) 0, transparent 40%),
+                      radial-gradient(circle at 88% 92%, rgba(0,0,0,.02) 0, transparent 45%);
+     animation:rise .4s cubic-bezier(.2,.7,.3,1);}
+  @keyframes rise{from{transform:translateY(22px) scale(.985);opacity:0}to{transform:none;opacity:1}}
+  .closeX{position:sticky;float:right;top:6px;margin:-8px -14px 0 0;z-index:3;
+     width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border);
+     background:var(--paper);font-size:20px;line-height:1;cursor:pointer;font-family:"Fredoka",sans-serif;
+     box-shadow:0 2px 6px var(--shadow);}
+  .closeX:hover{background:#fff}
+  .standing{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+     border-bottom:1.5px solid var(--rule);padding-bottom:6px;
+     font-family:"Spectral";font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#5a5246;}
+  .standing .brand{font-family:"Fredoka",sans-serif;letter-spacing:.06em;font-weight:600;color:var(--accent);text-transform:none;font-size:14px}
+  .masthead{text-align:center;padding:14px 0 6px;border-bottom:4px double var(--rule);}
+  .masthead .kicker{font-family:"Spectral";font-style:italic;color:#7a7163;font-size:14px;margin-bottom:4px}
+  .masthead h2{font-family:"Fraunces",serif;font-weight:900;font-optical-sizing:auto;
+     margin:0;font-size:clamp(30px,6vw,60px);line-height:.98;letter-spacing:-.5px}
+  .masthead .tag{font-family:"Spectral";font-size:13px;color:#6b6358;margin-top:8px;
+     display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+  .masthead .tag .dot{width:4px;height:4px;border-radius:50%;background:#b8ad9b;display:inline-block}
+  .note{margin:16px 0 6px;border:1px solid #e0c9a0;background:#fbf1dd;
+     border-left:5px solid var(--accent);border-radius:4px;padding:12px 15px;
+     font-size:14px;line-height:1.5;color:#4f463a;}
+  .note .lbl{font-family:"Fredoka",sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.04em;
+     text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px}
+  .body{margin-top:16px}
+  .cols{column-count:2;column-gap:34px;column-rule:1px solid #e4ddcf}
+  @media(max-width:620px){.cols{column-count:1}}
+  .art{break-inside:avoid;padding:0 0 14px;margin-bottom:14px;border-bottom:1px solid #e9e2d4}
+  .art:first-child{column-span:all;border-bottom:2px solid var(--rule);padding-bottom:16px;margin-bottom:18px}
+  .art:first-child h3{font-size:clamp(22px,3.4vw,30px)}
+  .art h3{font-family:"Fraunces",serif;font-weight:600;font-size:18px;line-height:1.2;margin:0 0 6px}
+  .art h3 a{color:var(--ink);text-decoration:none;background-image:linear-gradient(var(--accent),var(--accent));
+     background-size:0% 1.5px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .2s}
+  .art h3 a:hover{background-size:100% 1.5px}
+  .art .meta{font-family:"Spectral";font-size:12px;color:#857c6e;font-style:italic}
+  .art .meta b{font-style:normal;font-weight:600;color:#5a5246}
+  .ressort{break-inside:avoid;margin-bottom:20px}
+  .ressort .rname{font-family:"Fredoka",sans-serif;font-weight:600;font-size:13px;letter-spacing:.07em;
+     text-transform:uppercase;color:var(--accent2);border-bottom:2px solid var(--rule);padding-bottom:3px;margin-bottom:11px}
+  .art .snip{font-family:"Spectral";font-size:12.5px;line-height:1.45;color:#6b6358;margin-top:5px}
+  .empty{font-family:"Spectral";font-style:italic;font-size:13px;color:#9a9183;padding:2px 0 6px}
+  .nohits{font-family:"Spectral";font-size:13.5px;line-height:1.5;color:#5a5246;background:#f4eee0;
+     border:1px solid #e4ddcf;border-radius:6px;padding:11px 14px;margin:8px 0 2px}
+  .gnrow{text-align:center;margin:22px 0 4px}
+  .gnsec{margin-top:6px;border-top:1px dashed #d8d0bf;padding-top:14px}
+  .gnsec .rname{color:var(--accent)}
+  .skel{height:14px;background:linear-gradient(90deg,#ece5d6,#f5efe2,#ece5d6);
+     background-size:200% 100%;animation:sh 1.2s infinite;border-radius:3px;margin:7px 0}
+  @keyframes sh{to{background-position:-200% 0}}
+  .loadrow{display:flex;align-items:center;gap:12px;color:#7a7163;font-style:italic;font-size:14px;margin:8px 0 16px}
+  .mini{width:20px;height:20px;border-radius:50%;border:3px solid #ddd6c6;border-top-color:var(--accent2);animation:spin 1s linear infinite}
+  .more{display:block;margin:8px auto 0;font-family:"Fredoka",sans-serif;font-weight:600;font-size:14px;
+     border:1.5px solid var(--border);background:var(--paper);border-radius:999px;padding:9px 20px;cursor:pointer}
+  .more:hover{background:#fff}
+  .fallback{text-align:center;padding:18px 6px 8px;color:#5a5246}
+  .fallback p{font-size:14.5px;line-height:1.5;max-width:48ch;margin:0 auto 14px}
+  .gbtn{font-family:"Fredoka",sans-serif;font-weight:600;font-size:14.5px;display:inline-block;
+     text-decoration:none;color:#fff;background:var(--accent);border-radius:999px;padding:11px 22px;
+     box-shadow:0 3px 10px rgba(226,80,58,.35)}
+  .gbtn:hover{filter:brightness(1.05)}
+  .endrule{border:0;border-top:2px solid var(--rule);margin:26px 0 0}
+  .colophon{text-align:center;font-family:"Spectral";font-style:italic;font-size:12px;color:#9a9183;margin-top:10px}
+  .reloadbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:0 0 14px}
+  .reloadbtn{font-family:"Fredoka",sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.03em;
+     border:1.5px solid var(--border);background:var(--paper);color:var(--ink);border-radius:999px;
+     padding:7px 16px;cursor:pointer;transition:filter .15s}
+  .reloadbtn:hover:not(:disabled){background:#fff}
+  .reloadbtn:disabled{opacity:.5;cursor:default;color:#8a8174;border-color:#c9c1b1}
+</style>
+</head>
+<body>
+  <a class="toplink" href="https://Merricks-Tagesspiegel.janrickmer.de/" target="_blank" rel="noopener noreferrer">Merricks Tagesspiegel</a>
+  <header>
+    <h1>Merricks Globus</h1>
+    <div class="sub">Tippe ein Land an – und lies, was dort gerade passiert.</div>
+  </header>
+
+  <canvas id="stage"></canvas>
+
+  <div class="controls">
+    <button id="spinBtn" title="Drehung pausieren/fortsetzen">⏸ Drehung</button>
+    <button id="resetBtn" title="Ansicht zurücksetzen">⟳ Ansicht</button>
+  </div>
+  <div class="hint"><b>Ziehen</b> zum Drehen · <b>Scrollen</b> / <b>Pinch</b> zum Zoomen · <b>Land antippen</b> für die Zeitung</div>
+  <div class="credits">
+    Geodaten: Natural&nbsp;Earth / world-atlas (1:50&nbsp;Mio.) · Staatennamen: Auswärtiges&nbsp;Amt (Stand&nbsp;03/2024) · Nachrichten live über Google&nbsp;News
+  </div>
+
+  <div id="loader">
+    <p id="loadInfo">Ich lade gerade im Hintergrund die aktuellsten Nachrichten zu verschiedenen Regionen unserer Welt herunter. Gib mir einen Moment Zeit.</p>
+    <p id="loadReady">Die ersten Informationen zu den verschiedenen Regionen dieser Welt sind eingetroffen, allerdings längst noch nicht alle. Ich lade im Hintergrund weiter, während du schon einmal die Regionen dieser Welt erkunden kannst.</p>
+    <svg class="hg" viewBox="0 0 90 130" aria-hidden="true">
+      <defs>
+        <clipPath id="hgTopClip"><polygon points="20,20 70,20 45,63"/></clipPath>
+        <clipPath id="hgBotClip"><polygon points="45,67 70,110 20,110"/></clipPath>
+      </defs>
+      <rect class="cap" x="14" y="10" width="62" height="6" rx="3"/>
+      <rect class="cap" x="14" y="114" width="62" height="6" rx="3"/>
+      <g clip-path="url(#hgTopClip)"><rect class="sand sand-top" x="18" y="20" width="54" height="44"/></g>
+      <g clip-path="url(#hgBotClip)"><rect class="sand sand-bot" x="18" y="66" width="54" height="44"/></g>
+      <rect class="sand stream" x="43.5" y="60" width="3" height="12"/>
+      <polygon class="glass" points="20,20 70,20 45,65"/>
+      <polygon class="glass" points="45,65 70,110 20,110"/>
+    </svg>
+    <button id="goBtn" type="button">Los geht's</button>
+  </div>
+
+  <div id="paperWrap" aria-modal="true" role="dialog"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script>
+"use strict";
+/* ============ Datensätze (eingespielt beim Bau) ============ */
+const NAMES = {"Indonesia":{"de":"Indonesien"},"Malaysia":{"de":"Malaysia"},"Chile":{"de":"Chile"},"Bolivia":{"de":"Plurinationaler Staat Bolivien","q":"Bolivien"},"Peru":{"de":"Peru"},"Argentina":{"de":"Argentinien"},"Dhekelia":{"inert":true},"Cyprus":{"de":"Zypern","note":"Der Nordteil der Insel steht seit 1974 unter Kontrolle der nur von der Türkei anerkannten „Türkischen Republik Nordzypern“. Deutschland und die internationale Gemeinschaft erkennen allein die Republik Zypern für die gesamte Insel an. Diese Darstellung folgt der deutschen Position."},"India":{"de":"Indien"},"China":{"de":"China"},"Israel":{"de":"Israel"},"Palestine":{"de":"Palästinensische Gebiete","note":"Deutschland verwendet amtlich die Bezeichnung „Palästinensische Gebiete“ und hat einen Staat Palästina bislang nicht förmlich anerkannt; es unterstützt eine im Verhandlungsweg erzielte Zwei-Staaten-Lösung. Diese Darstellung folgt der deutschen Position.","q":"Palästina"},"Lebanon":{"de":"Libanon"},"Ethiopia":{"de":"Äthiopien"},"S. Sudan":{"de":"Südsudan"},"Somalia":{"de":"Somalia","note":"Die Region Somaliland erklärte 1991 ihre Unabhängigkeit, wird international – auch von Deutschland – aber nicht als eigener Staat anerkannt und gilt als Teil Somalias. Diese Darstellung folgt der deutschen Position."},"Kenya":{"de":"Kenia"},"Pakistan":{"de":"Pakistan"},"Malawi":{"de":"Malawi"},"Tanzania":{"de":"Vereinigte Republik Tansania","q":"Tansania"},"Syria":{"de":"Arabische Republik Syrien","q":"Syrien"},"Somaliland":{"redirect":"Somalia"},"France":{"de":"Frankreich"},"Suriname":{"de":"Suriname"},"Guyana":{"de":"Guyana"},"South Korea":{"de":"Republik Korea","q":"Südkorea"},"North Korea":{"de":"Demokratische Volksrepublik Korea","q":"Nordkorea"},"Morocco":{"de":"Marokko"},"W. Sahara":{"de":"Westsahara","note":"Die Westsahara ist ein Gebiet mit völkerrechtlich ungeklärtem Status. Marokko kontrolliert den größten Teil und beansprucht das Gebiet, die Frente Polisario ruft die Demokratische Arabische Republik Sahara aus. Die Vereinten Nationen führen die Westsahara als Gebiet ohne Selbstregierung; eine endgültige Klärung steht aus. Diese Darstellung folgt der deutschen bzw. UN-Position.","q":"Westsahara"},"Costa Rica":{"de":"Costa Rica"},"Nicaragua":{"de":"Nicaragua"},"Congo":{"de":"Kongo","q":"Republik Kongo"},"Dem. Rep. Congo":{"de":"Demokratische Republik Kongo","q":"Demokratische Republik Kongo"},"Bhutan":{"de":"Bhutan"},"Ukraine":{"de":"Ukraine","note":"Die Halbinsel Krim sowie Teile der Ostukraine werden seit 2014 von Russland kontrolliert bzw. völkerrechtswidrig annektiert. Deutschland und die EU erkennen diese Annexion nicht an und betrachten die Krim weiterhin als Teil der Ukraine. Aus russischer Sicht zählt die Krim nicht mehr zum ukrainischen Staatsgebiet. Diese Darstellung folgt der deutschen bzw. völkerrechtlichen Position."},"Belarus":{"de":"Belarus"},"Namibia":{"de":"Namibia"},"South Africa":{"de":"Südafrika"},"St-Martin":{"de":"Saint-Martin","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Frankreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name. Der Nordteil der Insel gehört zu Frankreich, der Südteil (Sint Maarten) zum Königreich der Niederlande.","q":"Saint-Martin Karibik"},"Sint Maarten":{"de":"Sint Maarten","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Königreich der Niederlande und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Oman":{"de":"Oman"},"Uzbekistan":{"de":"Usbekistan"},"Kazakhstan":{"de":"Kasachstan"},"Tajikistan":{"de":"Tadschikistan"},"Lithuania":{"de":"Litauen"},"Brazil":{"de":"Brasilien"},"Uruguay":{"de":"Uruguay"},"Mongolia":{"de":"Mongolei"},"Russia":{"de":"Russische Föderation","q":"Russland"},"Czechia":{"de":"Tschechien"},"Germany":{"de":"Deutschland"},"Estonia":{"de":"Estland"},"Latvia":{"de":"Lettland"},"Norway":{"de":"Norwegen"},"Sweden":{"de":"Schweden"},"Finland":{"de":"Finnland"},"Vietnam":{"de":"Vietnam"},"Cambodia":{"de":"Kambodscha"},"Luxembourg":{"de":"Luxemburg"},"United Arab Emirates":{"de":"Vereinigte Arabische Emirate"},"Belgium":{"de":"Belgien"},"Georgia":{"de":"Georgien"},"Macedonia":{"de":"Nordmazedonien"},"Albania":{"de":"Albanien"},"Azerbaijan":{"de":"Aserbaidschan"},"Kosovo":{"de":"Kosovo","note":"Kosovo erklärte 2008 seine Unabhängigkeit und wird von Deutschland als souveräner Staat anerkannt. Serbien und einige weitere Staaten erkennen die Unabhängigkeit nicht an. Diese Darstellung folgt der deutschen Position.","q":"Kosovo"},"Turkey":{"de":"Türkei"},"Spain":{"de":"Spanien"},"Laos":{"de":"Demokratische Volksrepublik Laos"},"Kyrgyzstan":{"de":"Kirgisistan"},"Armenia":{"de":"Armenien"},"Denmark":{"de":"Dänemark"},"Libya":{"de":"Libyen"},"Tunisia":{"de":"Tunesien"},"Romania":{"de":"Rumänien"},"Hungary":{"de":"Ungarn"},"Slovakia":{"de":"Slowakei"},"Poland":{"de":"Polen"},"Ireland":{"de":"Irland"},"United Kingdom":{"de":"Vereinigtes Königreich","q":"Großbritannien"},"Greece":{"de":"Griechenland"},"Zambia":{"de":"Sambia"},"Sierra Leone":{"de":"Sierra Leone"},"Guinea":{"de":"Guinea"},"Liberia":{"de":"Liberia"},"Central African Rep.":{"de":"Zentralafrikanische Republik"},"Sudan":{"de":"Sudan"},"Djibouti":{"de":"Dschibuti"},"Eritrea":{"de":"Eritrea"},"Austria":{"de":"Österreich"},"Iraq":{"de":"Irak"},"Italy":{"de":"Italien"},"Switzerland":{"de":"Schweiz"},"Iran":{"de":"Islamische Republik Iran","q":"Iran"},"Netherlands":{"de":"Königreich der Niederlande","q":"Niederlande"},"Liechtenstein":{"de":"Liechtenstein"},"Côte d'Ivoire":{"de":"Côte d'Ivoire","q":"Elfenbeinküste"},"Serbia":{"de":"Serbien"},"Mali":{"de":"Mali"},"Senegal":{"de":"Senegal"},"Nigeria":{"de":"Nigeria"},"Benin":{"de":"Benin"},"Angola":{"de":"Angola"},"Croatia":{"de":"Kroatien"},"Slovenia":{"de":"Slowenien"},"Qatar":{"de":"Katar"},"Saudi Arabia":{"de":"Saudi-Arabien"},"Botswana":{"de":"Botsuana","q":"Botswana"},"Zimbabwe":{"de":"Simbabwe"},"Bulgaria":{"de":"Bulgarien"},"Thailand":{"de":"Thailand"},"San Marino":{"de":"San Marino"},"Haiti":{"de":"Haiti"},"Dominican Rep.":{"de":"Dominikanische Republik"},"Chad":{"de":"Tschad"},"Kuwait":{"de":"Kuwait"},"El Salvador":{"de":"El Salvador"},"Guatemala":{"de":"Guatemala"},"Timor-Leste":{"de":"Timor-Leste"},"Brunei":{"de":"Brunei Darussalam"},"Monaco":{"de":"Monaco"},"Algeria":{"de":"Algerien"},"Mozambique":{"de":"Mosambik"},"eSwatini":{"de":"Eswatini"},"Burundi":{"de":"Burundi"},"Rwanda":{"de":"Ruanda"},"Myanmar":{"de":"Myanmar"},"Bangladesh":{"de":"Bangladesch"},"Andorra":{"de":"Andorra"},"Afghanistan":{"de":"Afghanistan"},"Montenegro":{"de":"Montenegro"},"Bosnia and Herz.":{"de":"Bosnien und Herzegowina","q":"Bosnien"},"Uganda":{"de":"Uganda"},"USNB Guantanamo Bay":{"inert":true},"Cuba":{"de":"Kuba"},"Honduras":{"de":"Honduras"},"Ecuador":{"de":"Ecuador"},"Colombia":{"de":"Kolumbien"},"Paraguay":{"de":"Paraguay"},"Portugal":{"de":"Portugal"},"Moldova":{"de":"Republik Moldau","q":"Moldau"},"Turkmenistan":{"de":"Turkmenistan"},"Jordan":{"de":"Jordanien"},"Nepal":{"de":"Nepal"},"Lesotho":{"de":"Lesotho"},"Cameroon":{"de":"Kamerun"},"Gabon":{"de":"Gabun"},"Niger":{"de":"Niger"},"Burkina Faso":{"de":"Burkina Faso"},"Togo":{"de":"Togo"},"Ghana":{"de":"Ghana"},"Guinea-Bissau":{"de":"Guinea-Bissau"},"Gibraltar":{"de":"Gibraltar","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"United States of America":{"de":"Vereinigte Staaten","q":"USA"},"Canada":{"de":"Kanada"},"Mexico":{"de":"Mexiko"},"Belize":{"de":"Belize"},"Panama":{"de":"Panama"},"Venezuela":{"de":"Bolivarische Republik Venezuela","q":"Venezuela"},"Papua New Guinea":{"de":"Papua-Neuguinea"},"Egypt":{"de":"Ägypten"},"Yemen":{"de":"Jemen"},"Mauritania":{"de":"Mauretanien"},"Eq. Guinea":{"de":"Äquatorialguinea"},"Gambia":{"de":"Gambia"},"Hong Kong":{"de":"Hongkong","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von der Volksrepublik China und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Vatican":{"de":"Vatikanstadt"},"N. Cyprus":{"redirect":"Cyprus"},"Cyprus U.N. Buffer Zone":{"inert":true},"Siachen Glacier":{"inert":true},"Baikonur":{"inert":true},"Akrotiri":{"inert":true},"Antarctica":{"inert":true},"Australia":{"de":"Australien"},"Greenland":{"de":"Grönland","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Dänemark und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Fiji":{"de":"Fidschi"},"New Zealand":{"de":"Neuseeland"},"New Caledonia":{"de":"Neukaledonien","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Frankreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Madagascar":{"de":"Madagaskar"},"Philippines":{"de":"Philippinen"},"Sri Lanka":{"de":"Sri Lanka"},"Curaçao":{"de":"Curaçao","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Königreich der Niederlande und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Aruba":{"de":"Aruba","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Königreich der Niederlande und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Bahamas":{"de":"Bahamas"},"Turks and Caicos Is.":{"de":"Turks- und Caicosinseln","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Taiwan":{"de":"Taiwan","note":"Taiwan versteht sich als eigenständige Republik (China), wird von Deutschland im Rahmen der Ein-China-Politik aber nicht als souveräner Staat anerkannt. Offizielle Beziehungen unterhält Deutschland nur zur Volksrepublik China; zu Taiwan bestehen inoffizielle Kontakte. Diese Darstellung folgt der deutschen Position.","q":"Taiwan"},"Japan":{"de":"Japan"},"St. Pierre and Miquelon":{"de":"Saint-Pierre und Miquelon","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Frankreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Iceland":{"de":"Island"},"Pitcairn Is.":{"de":"Pitcairninseln","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Fr. Polynesia":{"de":"Französisch-Polynesien","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Frankreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Fr. S. Antarctic Lands":{"de":"Französische Süd- und Antarktisgebiete","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Frankreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name.","q":"Französische Süd- und Antarktisgebiete"},"Seychelles":{"de":"Seychellen"},"Kiribati":{"de":"Kiribati"},"Marshall Is.":{"de":"Marshallinseln"},"Trinidad and Tobago":{"de":"Trinidad und Tobago"},"Grenada":{"de":"Grenada"},"St. Vin. and Gren.":{"de":"St. Vincent und die Grenadinen"},"Barbados":{"de":"Barbados"},"Saint Lucia":{"de":"St. Lucia"},"Dominica":{"de":"Dominica"},"U.S. Minor Outlying Is.":{"inert":true},"Montserrat":{"de":"Montserrat","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Antigua and Barb.":{"de":"Antigua und Barbuda"},"St. Kitts and Nevis":{"de":"St. Kitts und Nevis"},"U.S. Virgin Is.":{"de":"Amerikanische Jungferninseln","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von den Vereinigten Staaten und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"St-Barthélemy":{"de":"Saint-Barthélemy","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Frankreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Puerto Rico":{"de":"Puerto Rico","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von den Vereinigten Staaten und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Anguilla":{"de":"Anguilla","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"British Virgin Is.":{"de":"Britische Jungferninseln","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Jamaica":{"de":"Jamaika"},"Cayman Is.":{"de":"Kaimaninseln","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Bermuda":{"de":"Bermuda","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Heard I. and McDonald Is.":{"inert":true},"Saint Helena":{"de":"St. Helena","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Mauritius":{"de":"Mauritius"},"Comoros":{"de":"Komoren"},"São Tomé and Principe":{"de":"São Tomé und Príncipe"},"Cabo Verde":{"de":"Cabo Verde"},"Malta":{"de":"Malta"},"Jersey":{"de":"Jersey","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von der britischen Krone und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Guernsey":{"de":"Guernsey","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von der britischen Krone und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Isle of Man":{"de":"Insel Man","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von der britischen Krone und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Åland":{"de":"Åland","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Finnland und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Faeroe Is.":{"de":"Färöer","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Dänemark und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Indian Ocean Ter.":{"inert":true},"Br. Indian Ocean Ter.":{"de":"Britisches Territorium im Indischen Ozean","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name. Über die Souveränität besteht ein Streit mit Mauritius.","q":"Chagos-Archipel"},"Singapore":{"de":"Singapur"},"Norfolk Island":{"de":"Norfolkinsel","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Australien und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Cook Is.":{"de":"Cookinseln"},"Tonga":{"de":"Tonga"},"Wallis and Futuna Is.":{"de":"Wallis und Futuna","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von Frankreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Samoa":{"de":"Samoa"},"Solomon Is.":{"de":"Salomonen"},"Tuvalu":{"de":"Tuvalu"},"Maldives":{"de":"Malediven"},"Nauru":{"de":"Nauru"},"Micronesia":{"de":"Föderierte Staaten von Mikronesien","q":"Mikronesien"},"S. Geo. and the Is.":{"de":"Südgeorgien und die Südlichen Sandwichinseln","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name.","q":"Südgeorgien"},"Falkland Is.":{"de":"Falklandinseln","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von dem Vereinigten Königreich und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name. Argentinien beansprucht die Inseln (span. „Islas Malvinas“).","q":"Falklandinseln"},"Vanuatu":{"de":"Vanuatu"},"Niue":{"de":"Niue"},"American Samoa":{"de":"Amerikanisch-Samoa","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von den Vereinigten Staaten und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Palau":{"de":"Palau"},"Guam":{"de":"Guam","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von den Vereinigten Staaten und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"N. Mariana Is.":{"de":"Nördliche Marianen","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von den Vereinigten Staaten und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Bahrain":{"de":"Bahrain"},"Coral Sea Is.":{"inert":true},"Spratly Is.":{"inert":true},"Clipperton I.":{"inert":true},"Macao":{"de":"Macau","note":"Dies ist ein abhängiges bzw. autonomes Gebiet von der Volksrepublik China und kein souveräner Staat. Aufgeführt wird der für dieses Gebiet im Deutschen gebräuchliche Name."},"Ashmore and Cartier Is.":{"inert":true},"Bajo Nuevo Bank":{"inert":true},"Serranilla Bank":{"inert":true},"Scarborough Reef":{"inert":true}};          // engl. NE-Name -> {de, note?, q?, redirect?, inert?}
+const CRIMEA = [[33.629,46.125],[33.67,46.218],[33.846,46.196],[34.026,46.116],[34.201,46.1],[34.334,46.07],[34.411,45.988],[34.521,45.969],[34.642,45.981],[34.784,45.899],[34.81,45.785],[34.976,45.717],[35.481,45.298],[35.743,45.361],[35.767,45.389],[35.795,45.431],[35.858,45.469],[35.854,45.414],[36.022,45.368],[36.096,45.442],[36.268,45.467],[36.299,45.443],[36.341,45.457],[36.471,45.446],[36.549,45.412],[36.614,45.409],[36.598,45.334],[36.522,45.35],[36.488,45.309],[36.482,45.289],[36.426,45.252],[36.415,45.128],[36.44,45.067],[36.258,45.039],[36.225,45.008],[36.048,45.049],[35.917,45.001],[35.813,45.032],[35.634,45.115],[35.47,45.101],[35.4,45.043],[35.435,45.011],[35.374,44.998],[35.319,44.97],[35.273,44.967],[35.172,44.907],[35.081,44.794],[35.006,44.835],[34.93,44.836],[34.89,44.818],[34.757,44.821],[34.533,44.753],[34.474,44.729],[34.424,44.683],[34.331,44.545],[34.275,44.546],[34.266,44.536],[34.182,44.493],[34.136,44.442],[33.958,44.383],[33.84,44.401],[33.721,44.4],[33.62,44.462],[33.539,44.492],[33.38,44.565],[33.375,44.585],[33.445,44.607],[33.5,44.614],[33.525,44.629],[33.536,44.672],[33.537,44.73],[33.524,44.79],[33.546,44.837],[33.616,44.889],[33.606,44.987],[33.578,45.053],[33.413,45.185],[33.283,45.161],[33.219,45.187],[33.098,45.248],[33.052,45.282],[32.899,45.354],[32.677,45.326],[32.535,45.338],[32.495,45.436],[32.686,45.527],[32.744,45.553],[32.783,45.565],[32.83,45.57],[32.831,45.601],[33.163,45.736],[33.167,45.763],[33.179,45.78],[33.338,45.786],[33.425,45.831],[33.508,45.843],[33.578,45.868],[33.63,45.88],[33.659,45.859],[33.691,45.896],[33.759,45.922],[33.682,45.958],[33.632,45.944],[33.644,45.985],[33.644,46.015],[33.639,46.078],[33.629,46.125]];        // Krim-Ring [[lon,lat],...]
+
+/* ============ Farben (hell & bunt) ============ */
+const PALETTE = ["#f4a259","#f25c54","#5b8e7d","#8cb369","#e9c46a","#5390d9",
+  "#bc6c95","#48b89f","#e07a5f","#7c9eb2","#d4a017","#9b5de5",
+  "#ef798a","#2a9d8f","#f3722c","#577590","#b56576","#06a77d"];
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function colorFor(name){return PALETTE[hash(name)%PALETTE.length];}
+const COL={ocean:getCss("--ocean"),neutral:getCss("--neutral"),rim:getCss("--ocean-rim")};
+const PIN_ABS=1.5e-5;                 // nur echte Kleinststaaten
+function isPin(m,s){if(m.inert||m.area>=PIN_ABS)return false;return m.area<=0||m.area*s*s<80;}
+
+/* effektives Land (Weiterleitungen auflösen) */
+function eff(neName){const e=NAMES[neName];return (e&&e.redirect)?e.redirect:neName;}
+function resolve(neName){
+  let e=NAMES[neName]; if(!e)return null;
+  if(e.redirect){const t=NAMES[e.redirect]||{};return {de:t.de||e.redirect,note:t.note,q:t.q,key:e.redirect};}
+  return {de:e.de,note:e.note,q:e.q,key:neName,inert:e.inert};
+}
+
+/* ============ Globus-Aufbau ============ */
+const canvas=document.getElementById("stage");
+const ctx=canvas.getContext("2d");
+let W=0,H=0,DPR=1;
+const projection=d3.geoOrthographic().clipAngle(90).precision(.4);
+let path=d3.geoPath(projection,ctx);
+const graticule=d3.geoGraticule10();
+
+let feats10=null,feats50=null;     // GeoJSON-Feature-Arrays
+let meta=null;                     // pro 10m-Feature: {name,area,centroid,inert,entry}
+let R0=300;                        // Basis-Radius
+let rot=[ -10, -18 ];              // Anfangsdrehung (Europa/Afrika sichtbar)
+let autoSpin=true, frozen=false;
+let fastUntil=0;                   // bis dahin grobe (50m) Darstellung
+let selectedFeature=null, selectedIsCrimea=false;
+
+function resize(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=window.innerWidth;H=window.innerHeight;
+  canvas.width=W*DPR;canvas.height=H*DPR;
+  canvas.style.width=W+"px";canvas.style.height=H+"px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  R0=Math.min(W,H)*0.42;
+  if(!scaleSet){projection.scale(R0);scaleSet=true;}
+  projection.translate([W/2,H/2]);
+  render();
+}
+let scaleSet=false;
+window.addEventListener("resize",resize);
+
+/* ---- Zeichnen ---- */
+function frontVisible(lon,lat){
+  const c=[-rot[0],-rot[1]];
+  return d3.geoDistance(c,[lon,lat])<Math.PI/2-0.02;
+}
+function render(){
+  if(!feats50&&!feats10)return;
+  const fast=performance.now()<fastUntil;
+  // Durchgängig die leichte 50m-Geometrie: die hochauflösende 10m-Variante kostet auf
+  // Smartphones viel Arbeitsspeicher und erzeugte im Ruhezustand das umkippende
+  // Vollflächen-Artefakt (ganzer Globus orange). 50m ist hier stabil und ausreichend.
+  const arr=feats50||feats10;
+  ctx.clearRect(0,0,W,H);
+  projection.rotate(rot);
+  groundShadow();
+
+  // Ozean
+  ctx.beginPath();path({type:"Sphere"});
+  ctx.fillStyle=COL.ocean;ctx.fill();
+
+  // Gitternetz (dezent)
+  ctx.beginPath();path(graticule);
+  ctx.strokeStyle="rgba(120,140,150,.18)";ctx.lineWidth=.6;ctx.stroke();
+
+  // Länder
+  ctx.lineJoin="round";
+  for(const f of arr){
+    const nm=f.properties.name;const entry=NAMES[nm];
+    ctx.beginPath();path(f);
+    ctx.fillStyle=(entry&&entry.inert)?COL.neutral:colorFor(eff(nm));
+    ctx.fill();
+    ctx.lineWidth=.5;ctx.strokeStyle="rgba(35,32,28,.55)";ctx.stroke();
+  }
+
+  // Krim-Flicken (ukrainisch eingefärbt)
+  drawCrimea(false);
+
+  // Deutschland-Sonderfall: Bundesländer / Landkreise beim Hineinzoomen
+  maybeLoadDE();
+  const lvl=deLevel();
+  if(lvl) drawDE(lvl,fast);
+
+  // Bei starkem Zoom feines Gradnetz darüber, damit nie eine reine (orange) Farbfläche ohne Bezug entsteht
+  if(projection.scale()>R0*5){
+    const c=[-rot[0],-rot[1]];
+    const st=projection.scale()>R0*22?1:(projection.scale()>R0*11?2:5);
+    const ext=[[c[0]-13,Math.max(-89,c[1]-13)],[c[0]+13,Math.min(89,c[1]+13)]];
+    ctx.beginPath();path(d3.geoGraticule().extent(ext).step([st,st])());
+    ctx.strokeStyle="rgba(35,32,28,.16)";ctx.lineWidth=.6;ctx.stroke();
+  }
+
+  // Kugel-Schattierung (3D-Effekt)
+  sphereShade();
+
+  // Pins für Kleinststaaten
+  if(meta) drawPins();
+
+  // Auswahl-Hervorhebung (eingefroren)
+  if(frozen&&(selectedFeature||selectedIsCrimea)) drawSelection();
+}
+
+function getCss(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||"#e9f0f3";}
+
+function drawCrimea(highlight){
+  const cx=projection.translate(),sc=projection.scale();
+  // sichtbar?
+  const cen=ringCentroid(CRIMEA);
+  if(!frontVisible(cen[0],cen[1]))return;
+  ctx.beginPath();
+  path({type:"Polygon",coordinates:[CRIMEA]});
+  ctx.fillStyle=colorFor("Ukraine");ctx.fill();
+  ctx.lineWidth=highlight?1.6:.6;
+  ctx.strokeStyle=highlight?"#23201c":"rgba(35,32,28,.55)";ctx.stroke();
+}
+
+function groundShadow(){
+  const t=projection.translate(),s=projection.scale();
+  const cy=t[1]+s*0.98, rx=s*0.78;
+  const g=ctx.createRadialGradient(t[0],cy,1,t[0],cy,rx);
+  g.addColorStop(0,"rgba(30,40,55,.16)");g.addColorStop(.6,"rgba(30,40,55,.05)");g.addColorStop(1,"rgba(30,40,55,0)");
+  ctx.save();ctx.translate(t[0],cy);ctx.scale(1,0.17);ctx.translate(-t[0],-cy);
+  ctx.beginPath();ctx.arc(t[0],cy,rx,0,2*Math.PI);ctx.fillStyle=g;ctx.fill();ctx.restore();
+}
+function sphereShade(){
+  const t=projection.translate(),s=projection.scale();
+  const g=ctx.createRadialGradient(t[0]-s*0.32,t[1]-s*0.34,s*0.1, t[0],t[1],s*1.02);
+  g.addColorStop(0,"rgba(255,255,255,.28)");
+  g.addColorStop(.42,"rgba(255,255,255,0)");
+  g.addColorStop(.86,"rgba(20,28,38,.05)");
+  g.addColorStop(1,"rgba(15,22,32,.20)");
+  ctx.beginPath();ctx.arc(t[0],t[1],s,0,2*Math.PI);
+  ctx.fillStyle=g;ctx.fill();
+  // Rand
+  ctx.beginPath();ctx.arc(t[0],t[1],s,0,2*Math.PI);
+  ctx.lineWidth=1.1;ctx.strokeStyle=COL.rim;ctx.stroke();
+}
+
+function drawPins(){
+  const s=projection.scale();
+  for(const m of meta){
+    if(!isPin(m,s))continue;
+    if(!frontVisible(m.centroid[0],m.centroid[1]))continue;
+    const p=projection(m.centroid);if(!p)continue;
+    const col=colorFor(eff(m.name));
+    // Stiel
+    ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(p[0],p[1]-11);
+    ctx.lineWidth=1.4;ctx.strokeStyle="rgba(35,32,28,.6)";ctx.stroke();
+    // Kopf
+    ctx.beginPath();ctx.arc(p[0],p[1]-13,4.4,0,2*Math.PI);
+    ctx.fillStyle=col;ctx.fill();ctx.lineWidth=1.3;ctx.strokeStyle="#23201c";ctx.stroke();
+    ctx.beginPath();ctx.arc(p[0],p[1],1.6,0,2*Math.PI);ctx.fillStyle="#23201c";ctx.fill();
+  }
+}
+
+function drawSelection(){
+  // Abdunkeln
+  ctx.fillStyle="rgba(251,248,240,.62)";ctx.fillRect(0,0,W,H);
+  if(selectedIsCrimea){drawCrimea(true);
+    // Ukraine auch hervorheben
+    const uk=(feats10||feats50).find(f=>f.properties.name==="Ukraine");
+    if(uk)highlightFeature(uk);
+    return;
+  }
+  highlightFeature(selectedFeature);
+}
+function highlightFeature(f){
+  if(!f)return;
+  const p=f.properties||{};
+  ctx.beginPath();path(f);
+  ctx.fillStyle=(p.NAME_3||p.type==="State")?subColor(f):colorFor(eff(p.name));
+  ctx.fill();
+  ctx.lineWidth=2;ctx.strokeStyle="#23201c";ctx.stroke();
+  if(p.name==="Ukraine")drawCrimea(true);
+}
+
+/* ---- Deutschland-Sonderfall: Bundesländer & Landkreise ---- */
+const DE_CENTER=[10.45,51.16];
+const DE_BL_URL="https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/2_bundeslaender/4_niedrig.geo.json";
+const DE_KR_URL="https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/4_kreise/4_niedrig.geo.json";
+// Geografische Spannweiten (Bogenmaß) für die Sichtbarkeitsschwellen
+const DE_NS=7.8*Math.PI/180;        // Nord- bis Südgrenze Deutschlands (~47,3°–55,1°N)
+const FRDK_NS=15.45*Math.PI/180;    // Süd-Frankreich (~42,3°N) bis Nord-Dänemark (~57,75°N)
+const FRDK_EW=17.7*Math.PI/180;     // West-Frankreich (~5°W) bis Ost-Dänemark (~12,7°E)
+const FRDK_CLAT=50*Math.PI/180;
+let deBL=null,deKR=null,deBLload=false,deKRload=false;
+function nearDE(){return d3.geoDistance([-rot[0],-rot[1]],DE_CENTER)<0.2;}
+// kleinste Skalierung, bei der eine Nord-Süd-Spanne nicht mehr in die Bildhöhe passt
+function vScaleFor(nsRad){return H/(2*Math.sin(nsRad/2));}
+// kleinste Skalierung, bei der eine Box (N-S & O-W) nicht mehr vollständig ins Bild passt
+function boxScaleFor(nsRad,ewRad,clatRad){
+  return Math.min(H/(2*Math.sin(nsRad/2)), W/(2*Math.cos(clatRad)*Math.sin(ewRad/2)));
+}
+function blThreshold(){return boxScaleFor(FRDK_NS,FRDK_EW,FRDK_CLAT);}  // Frankreich+Dänemark passen nicht mehr ganz ins Bild
+function krThreshold(){return vScaleFor(DE_NS);}                        // Nord- & Südgrenze Deutschlands nicht mehr gemeinsam im Bild
+function deLevel(){
+  if(!nearDE())return null;
+  const s=projection.scale();
+  if(s>=krThreshold())return "kreise";
+  if(s>=blThreshold())return "laender";
+  return null;
+}
+function maybeLoadDE(){
+  if(!nearDE())return;
+  const s=projection.scale();
+  if(!deBL&&!deBLload){deBLload=true;            // Bundesländer früh laden (nur ~100 KB)
+    fetch(DE_BL_URL).then(r=>r.json()).then(j=>{deBL=j;render();}).catch(()=>{deBLload=false;});}
+  if(s>=krThreshold()*0.5&&!deKR&&!deKRload){deKRload=true;
+    fetch(DE_KR_URL).then(r=>r.json()).then(j=>{deKR=j;render();}).catch(()=>{deKRload=false;});}
+}
+function krCore(n){return (n||"").replace(/\s+(Städte|Stadt|Landkreis|Kreis)$/,"").trim();}
+function subKey(f){const p=f.properties||{};return p.NAME_3?krCore(p.NAME_3):(p.name||"x");}
+function subColor(f){return colorFor(subKey(f));}
+function fillLayer(fc,lw){if(!fc)return;
+  for(const f of fc.features){ctx.beginPath();path(f);
+    ctx.fillStyle=subColor(f);ctx.fill();
+    ctx.lineWidth=lw;ctx.strokeStyle="rgba(35,32,28,.6)";ctx.stroke();}}
+function strokeLayer(fc,lw){if(!fc)return;
+  for(const f of fc.features){ctx.beginPath();path(f);
+    ctx.lineWidth=lw;ctx.strokeStyle="rgba(35,32,28,.9)";ctx.stroke();}}
+function drawDE(lvl,fast){
+  if(lvl==="kreise"&&!fast&&deKR){fillLayer(deKR,.45);strokeLayer(deBL,1.6);}
+  else if(deBL){fillLayer(deBL,.6);}
+  else if(lvl==="kreise"&&deKR){fillLayer(deKR,.45);}
+}
+function blInfo(f){const n=f.properties.name;return {de:n,q:n,kicker:"Bundesland · Deutschland",key:"BL:"+n};}
+function krInfo(f){const p=f.properties;const core=krCore(p.NAME_3);
+  const stadt=/Städte/.test(p.TYPE_3||"")||/Städte$/.test(p.NAME_3||"");
+  return {de:core,q:core,kicker:(stadt?"Kreisfreie Stadt":"Landkreis")+" · "+(p.NAME_1||"Deutschland"),key:"KR:"+(p.ID_3||core)};}
+function scheduleUpgrade(){clearTimeout(window._up);window._up=setTimeout(()=>{if(!frozen)render();},260);}
+
+/* ---- Geometrie-Helfer ---- */
+function ringCentroid(r){let x=0,y=0;for(const p of r){x+=p[0];y+=p[1];}return [x/r.length,y/r.length];}
+function pointInRing(pt,ring){
+  let x=pt[0],y=pt[1],inside=false;
+  for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+    const xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1];
+    const inter=((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi);
+    if(inter)inside=!inside;
+  }
+  return inside;
+}
+
+/* ============ Interaktion ============ */
+const pointers=new Map();
+let dragLast=null,downPt=null,downTime=0,moved=0,pinchDist=0;
+
+canvas.addEventListener("pointerdown",e=>{
+  if(frozen)return;
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId,[e.clientX,e.clientY]);
+  canvas.classList.add("grabbing");
+  autoSpin=false;updateSpinBtn();
+  if(pointers.size===1){dragLast=[e.clientX,e.clientY];downPt=[e.clientX,e.clientY];downTime=performance.now();moved=0;}
+  else if(pointers.size===2){pinchDist=twoDist();}
+});
+canvas.addEventListener("pointermove",e=>{
+  if(!pointers.has(e.pointerId)||frozen)return;
+  pointers.set(e.pointerId,[e.clientX,e.clientY]);
+  fastUntil=performance.now()+220;
+  if(pointers.size>=2){
+    const d=twoDist();
+    if(pinchDist>0){zoomBy(d/pinchDist);}
+    pinchDist=d;render();return;
+  }
+  if(dragLast){
+    const dx=e.clientX-dragLast[0],dy=e.clientY-dragLast[1];
+    moved+=Math.abs(dx)+Math.abs(dy);
+    const k=0.26*(260/projection.scale());
+    rot[0]+=dx*k;rot[1]=Math.max(-90,Math.min(90,rot[1]-dy*k));
+    dragLast=[e.clientX,e.clientY];render();
+  }
+});
+function endPointer(e){
+  if(!pointers.has(e.pointerId))return;
+  const wasSingle=pointers.size===1;
+  pointers.delete(e.pointerId);
+  if(pointers.size<2)pinchDist=0;
+  if(pointers.size===0){canvas.classList.remove("grabbing");dragLast=null;
+    if(wasSingle&&downPt&&moved<6&&performance.now()-downTime<400){trySelect(downPt[0],downPt[1]);}
+    // Auto-Spin nach Pause wieder erlauben
+    clearTimeout(window._sp);window._sp=setTimeout(()=>{if(!frozen&&pointers.size===0&&projection.scale()<R0*1.6){autoSpin=true;updateSpinBtn();}},3500);
+    scheduleUpgrade();
+  }
+}
+canvas.addEventListener("pointerup",endPointer);
+canvas.addEventListener("pointercancel",endPointer);
+canvas.addEventListener("wheel",e=>{
+  if(frozen)return;e.preventDefault();
+  autoSpin=false;updateSpinBtn();fastUntil=performance.now()+220;
+  zoomBy(Math.pow(1.0035,-e.deltaY));render();
+  clearTimeout(window._sp);window._sp=setTimeout(()=>{if(!frozen&&projection.scale()<R0*1.6){autoSpin=true;updateSpinBtn();}},3500);
+  scheduleUpgrade();
+},{passive:false});
+function twoDist(){const v=[...pointers.values()];const a=v[0],b=v[1];return Math.hypot(a[0]-b[0],a[1]-b[1]);}
+function maxZoom(){
+  if(nearDE()){
+    if(!deBL)return blThreshold()*0.98;   // nicht tiefer, bis Bundesländer geladen sind
+    if(!deKR)return krThreshold()*0.98;   // nicht tiefer, bis Landkreise geladen sind
+  }
+  return R0*80;
+}
+function zoomBy(f){const mx=maxZoom();projection.scale(Math.max(R0*0.55,Math.min(mx,projection.scale()*f)));}
+
+/* ---- Auswahl / Trefferprüfung ---- */
+function trySelect(sx,sy){
+  const rect=canvas.getBoundingClientRect();
+  const x=sx-rect.left,y=sy-rect.top;
+  // 0) Deutschland-Drilldown (Landkreis bzw. Bundesland)
+  const lvl=deLevel();
+  if(lvl){
+    const llDE=projection.invert([x,y]);
+    if(llDE){
+      if(lvl==="kreise"&&deKR){
+        for(const f of deKR.features){if(d3.geoContains(f,llDE)){openPaper(krInfo(f),false,null,f);return;}}
+      }else if(deBL){
+        for(const f of deBL.features){if(d3.geoContains(f,llDE)){openPaper(blInfo(f),false,null,f);return;}}
+      }
+    }
+  }
+  // 1) Pins (Kleinststaaten)
+  if(meta){
+    const s=projection.scale();let best=null,bd=15;
+    for(const m of meta){
+      if(!isPin(m,s))continue;
+      if(!frontVisible(m.centroid[0],m.centroid[1]))continue;
+      const p=projection(m.centroid);if(!p)continue;
+      const d=Math.hypot(p[0]-x,p[1]-(y+13));
+      if(d<bd){bd=d;best=m;}
+    }
+    if(best){openPaper(resolve(best.name),false,best.name);return;}
+  }
+  const ll=projection.invert([x,y]);
+  if(!ll)return;
+  // 2) Krim -> Ukraine
+  if(pointInRing(ll,CRIMEA)){openPaper(resolve("Ukraine"),true,"Ukraine");return;}
+  // 3) Land per Geometrie
+  const arr=feats10||feats50;
+  for(const f of arr){
+    const entry=NAMES[f.properties.name];if(entry&&entry.inert)continue;
+    if(d3.geoContains(f,ll)){
+      const r=resolve(f.properties.name);if(!r||r.inert)return;
+      // Krim liegt geom. in Russland -> falls dort getroffen, NICHT umleiten (Krim oben schon behandelt)
+      openPaper(r,false,f.properties.name);return;
+    }
+  }
+}
+
+/* ---- Animationsschleife ---- */
+let lastFrame=0;
+function loop(t){
+  requestAnimationFrame(loop);
+  if(frozen)return;
+  if(autoSpin&&pointers.size===0&&projection.scale()<R0*1.6){
+    if(t-lastFrame>40){           // ~25 fps
+      rot[0]+=0.6;lastFrame=t;render();
+    }
+  }
+}
+requestAnimationFrame(loop);
+
+/* ============ Zeitung ============ */
+const wrap=document.getElementById("paperWrap");
+const OUTLETS=[
+  {name:"Tagesschau",feeds:["https://www.tagesschau.de/xml/rss2","https://www.tagesschau.de/ausland/index~rss2.xml"]},
+  {name:"Spiegel",feeds:["https://www.spiegel.de/schlagzeilen/index.rss","https://www.spiegel.de/ausland/index.rss"]},
+  {name:"Süddeutsche Zeitung",feeds:["https://rss.sueddeutsche.de/rss/Alles","https://rss.sueddeutsche.de/rss/Politik"]},
+  {name:"FAZ",feeds:["https://www.faz.net/rss/aktuell","https://www.faz.net/rss/aktuell/politik"]},
+  {name:"Handelsblatt",feeds:["https://www.handelsblatt.com/contentexport/feed/schlagzeilen","https://www.handelsblatt.com/contentexport/feed/politik"]},
+  {name:"taz",feeds:["https://taz.de/!p4608;rss/","https://taz.de/Politik/!p4615;rss/"]},
+  {name:"Neue Osnabrücker Zeitung",feeds:["https://www.noz.de/rss/ressort/Deutschland-Welt","https://www.noz.de/rss/ressort/Politik","https://www.noz.de/rss/ressort/Osnabr%C3%BCck"]}
+];
+// Nur auf Landkreis-Seiten zusätzlich eingebunden (HNA deckt Nordhessen & Südniedersachsen ab)
+const HNA={name:"HNA",feeds:["https://feeds.feedburner.com/hna/kassel","https://feeds.feedburner.com/hna/goettingen","https://feeds.feedburner.com/hna/northeim","https://feeds.feedburner.com/hna/frankenberg"]};
+const feedCache=new Map();   // feedUrl -> {items:[{title,link,date,desc,source}], ts}
+const inflight=new Map();
+let currentCountryKey=null;
+
+function freezeGlobe(feat,isCrimea){
+  selectedFeature=feat;selectedIsCrimea=isCrimea;frozen=true;render();
+}
+function unfreeze(){frozen=false;selectedFeature=null;selectedIsCrimea=false;
+  fastUntil=0;render();
+  clearTimeout(window._sp);window._sp=setTimeout(()=>{if(projection.scale()<R0*1.6){autoSpin=true;updateSpinBtn();}},2500);
+}
+
+function openPaper(info,isCrimea,neName,selFeat){
+  if(!info||!info.de)return;
+  const feat=selFeat||(feats10||feats50).find(f=>f.properties.name===(info.key||neName))||
+             (feats10||feats50).find(f=>f.properties.name===neName);
+  freezeGlobe(feat,isCrimea);
+  const today=new Date();
+  const dStr=today.toLocaleDateString("de-DE",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  const ed=Math.floor((today-new Date(today.getFullYear(),0,0))/864e5);
+  const noteHtml=info.note?`<div class="note"><span class="lbl">✦ Hinweis der Redaktion</span>${esc(info.note)}</div>`:"";
+  currentCountryKey=info.key||neName;
+  wrap.innerHTML=`
+    <div class="sheet">
+      <button class="closeX" id="closeX" aria-label="Schließen">×</button>
+      <div class="standing">
+        <span class="brand">Merricks Globus</span>
+        <span>Ausgabe Nr.&nbsp;${ed} · ${today.getFullYear()}</span>
+        <span>Preis: 1 Klick</span>
+      </div>
+      <div class="masthead">
+        <div class="kicker">${esc(info.kicker||"Auslandskorrespondenz · Pressespiegel")}</div>
+        <h2>${esc(info.de)}</h2>
+        <div class="tag"><span id="mhDate">${dStr}</span><span class="dot"></span><span>Pressespiegel deutscher Medien</span></div>
+      </div>
+      ${noteHtml}
+      <div class="body" id="paperBody">
+        <div class="loadrow"><span class="mini"></span> Lese die Feeds von Tagesschau, Spiegel, SZ, FAZ, Handelsblatt, taz &amp; NOZ …</div>
+        <div class="cols">${OUTLETS.map(o=>`<div class="ressort"><div class="rname">${esc(o.name)}</div>${skel()}</div>`).join("")}</div>
+      </div>
+    </div>`;
+  wrap.classList.add("show");
+  document.getElementById("closeX").onclick=closePaper;
+  renderPaperNews(info);
+}
+function closePaper(){wrap.classList.remove("show");wrap.innerHTML="";currentCountryKey=null;unfreeze();}
+wrap.addEventListener("click",e=>{if(e.target===wrap)closePaper();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&wrap.classList.contains("show"))closePaper();});
+
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function skel(){return `<div class="art"><div class="skel" style="width:90%"></div><div class="skel" style="width:60%"></div></div>`;}
+
+function googleNewsUrl(info){const q=info.q||info.de;return `https://news.google.com/search?q=${encodeURIComponent(q)}&hl=de&gl=DE&ceid=DE:de`;}
+
+/* Ländererkennung: Wortgrenzen (Unicode) + dt. Flexionsendungen */
+function buildMatcher(terms){
+  const parts=[...new Set(terms.filter(Boolean).map(t=>String(t).trim()).filter(t=>t.length>=2))]
+    .map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  if(!parts.length)return null;
+  const b="(?:"+parts.join("|")+")(?:s|n|en|er|sche|schen|sches|nische|nischen)?";
+  try{return new RegExp("(?<![\\p{L}])"+b+"(?![\\p{L}])","iu");}
+  catch(e){try{return new RegExp("\\b"+b+"\\b","i");}catch(_){return new RegExp(parts.join("|"),"i");}}
+}
+function stripHtml(s){
+  s=(s||"").replace(/<!\[CDATA\[|\]\]>/g,"").replace(/<[^>]*>/g," ");
+  const t=document.createElement("textarea");t.innerHTML=s;s=t.value;
+  return s.replace(/\s+/g," ").trim();
+}
+function parseFeed(xml,outlet){
+  const doc=new DOMParser().parseFromString(xml,"text/xml");
+  const items=[...doc.getElementsByTagName("item")];
+  return items.map(it=>{
+    const g=n=>{const el=it.getElementsByTagName(n)[0];return el?el.textContent:"";};
+    let desc=g("description");
+    if(!desc){const ce=it.getElementsByTagName("content:encoded")[0];if(ce)desc=ce.textContent;}
+    const t=new Date(g("pubDate")||g("date")||g("dc:date"));
+    return {title:stripHtml(g("title")),link:(g("link")||"").trim(),date:isNaN(t)?0:t.getTime(),desc:stripHtml(desc),source:outlet};
+  });
+}
+const FETCHERS=rss=>[
+  {u:`https://api.allorigins.win/get?url=${encodeURIComponent(rss)}`,json:true},
+  {u:`https://api.allorigins.win/raw?url=${encodeURIComponent(rss)}`},
+  {u:`https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(rss)}`},
+  {u:`https://corsproxy.io/?url=${encodeURIComponent(rss)}`}
+];
+async function loadFeed(url,outlet){
+  for(const t of FETCHERS(url)){
+    try{
+      const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+      const r=await fetch(t.u,{signal:ctrl.signal});clearTimeout(to);
+      if(!r.ok)continue;
+      let xml=t.json?(await r.json()).contents:await r.text();
+      if(!xml)continue;
+      const items=parseFeed(xml,outlet);
+      if(items.length){feedCache.set(url,{items,ts:Date.now(),ok:true});return true;}
+    }catch(e){}
+  }
+  feedCache.set(url,{items:[],ts:Date.now(),ok:false});   // Fehlschlag kurz merken
+  return false;
+}
+function loadFeedOnce(url,outlet){
+  if(feedCache.has(url))return Promise.resolve(true);
+  if(inflight.has(url))return inflight.get(url);
+  const p=loadFeed(url,outlet).finally(()=>inflight.delete(url));
+  inflight.set(url,p);return p;
+}
+async function reloadFeed(url,outlet){     // Neu-laden: bei Fehlschlag alten Cache (alte Beiträge) BEHALTEN
+  for(const t of FETCHERS(url)){
+    try{
+      const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+      const r=await fetch(t.u,{signal:ctrl.signal});clearTimeout(to);
+      if(!r.ok)continue;
+      let xml=t.json?(await r.json()).contents:await r.text();
+      if(!xml)continue;
+      const items=parseFeed(xml,outlet);
+      if(items.length){feedCache.set(url,{items,ts:Date.now(),ok:true});return true;}
+    }catch(e){}
+  }
+  return false;                            // kein Überschreiben -> bisher geladene Beiträge bleiben sichtbar
+}
+async function ensureFeeds(){
+  const now=Date.now(),jobs=[];
+  for(const o of OUTLETS)for(const f of o.feeds){
+    const c=feedCache.get(f);
+    const ttl=(c&&c.ok)?600000:300000;
+    if(c&&now-c.ts>ttl)feedCache.delete(f);
+    if(!feedCache.has(f))jobs.push(loadFeedOnce(f,o.name));
+  }
+  if(jobs.length)await Promise.allSettled(jobs);
+}
+/* Google-News-Meldungen zur Region per RSS */
+const gnCache=new Map(),gnInflight=new Map();   // Google-News-Ergebnisse pro Region zwischenspeichern
+async function gnFetchRaw(q){                     // roher Abruf ohne Cache (liefert Array oder null)
+  const rss=`https://news.google.com/rss/search?q=${encodeURIComponent(q+" when:1y")}&hl=de&gl=DE&ceid=DE:de`;
+  for(const t of FETCHERS(rss)){
+    try{
+      const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+      const r=await fetch(t.u,{signal:ctrl.signal});clearTimeout(to);
+      if(!r.ok)continue;
+      let xml=t.json?(await r.json()).contents:await r.text();
+      if(!xml)continue;
+      const items=[...new DOMParser().parseFromString(xml,"text/xml").getElementsByTagName("item")];
+      if(items.length){
+        return items.map(it=>{
+          const g=n=>{const el=it.getElementsByTagName(n)[0];return el?el.textContent:"";};
+          let title=g("title");const src=g("source");
+          if(src&&title.endsWith(" - "+src))title=title.slice(0,-(src.length+3));
+          const d=new Date(g("pubDate"));
+          return {title:stripHtml(title),link:(g("link")||"").trim(),date:isNaN(d)?0:d.getTime(),desc:"",source:src||"Google News"};
+        });
+      }
+    }catch(e){}
+  }
+  return null;
+}
+function fetchGoogleNews(q){
+  const c=gnCache.get(q);
+  if(c&&Date.now()-c.ts<600000)return Promise.resolve(c.items);   // 10 Min Cache
+  if(gnInflight.has(q))return gnInflight.get(q);
+  const p=gnFetchRaw(q).then(items=>{if(items&&items.length)gnCache.set(q,{items,ts:Date.now()});return items;})
+    .finally(()=>gnInflight.delete(q));
+  gnInflight.set(q,p);
+  return p;
+}
+function outletItems(o){
+  const seen=new Set(),all=[];
+  for(const f of o.feeds){const c=feedCache.get(f);if(!c)continue;
+    for(const it of c.items){if(it.link&&seen.has(it.link))continue;if(it.link)seen.add(it.link);all.push(it);}}
+  return all;
+}
+function fmtDate(ms){if(!ms)return"";const x=new Date(ms);if(isNaN(x))return"";
+  return x.toLocaleDateString("de-DE",{day:"numeric",month:"short"})+", "+x.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr";}
+function artHtml(it,showSource){
+  const snip=it.desc?`<div class="snip">${esc(it.desc.slice(0,200))}${it.desc.length>200?"…":""}</div>`:"";
+  const meta=((showSource&&it.source)?esc(it.source)+" · ":"")+esc(fmtDate(it.date));
+  return `<article class="art"><h3><a href="${esc(it.link)}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a></h3><div class="meta">${meta}</div>${snip}</article>`;
+}
+function setMastheadDate(ts){
+  if(!(ts>0))return;
+  const el=document.getElementById("mhDate");
+  if(el)el.textContent=new Date(ts).toLocaleDateString("de-DE",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+}
+let paperNewest=0;
+function bumpMasthead(ts){if(ts>paperNewest){paperNewest=ts;setMastheadDate(ts);}}   // Datum nie zurückdatieren
+function outletStatus(o){            // "data": mind. ein Feed geladen | "pending": lädt noch | "failed": alle Feeds fehlgeschlagen
+  let anyOk=false,anyPending=false;
+  for(const f of o.feeds){const c=feedCache.get(f);if(!c){anyPending=true;continue;}if(c.ok)anyOk=true;}
+  return anyOk?"data":(anyPending?"pending":"failed");
+}
+function outletPicks(o,matcher){     // bis zu zwei passende, neueste Meldungen dieser Quelle
+  let items=outletItems(o);
+  if(matcher)items=items.filter(it=>matcher.test(it.title+" "+it.desc));
+  return items.sort((a,b)=>b.date-a.date).slice(0,2);
+}
+const MSG_LOADING="Zum jetzigen Zeitpunkt habe ich noch keine aktuellen Meldungen zu dieser Region aus dieser Quelle geladen. Ich suche gerade im Hintergrund nach neuesten Meldungen. Sobald ich fertig bin, erscheinen die Beiträge hier.";
+function outletInner(o,info,matcher){
+  const items=outletPicks(o,matcher);
+  if(items.length)return items.map(it=>artHtml(it,false)).join("");
+  if(outletStatus(o)==="data")        // Feed geladen, aber zu dieser Region nichts gefunden
+    return `<div class="empty">Zurzeit liegt aus dieser Quelle keine Meldung zu ${esc(info.de)} vor.</div>`;
+  return `<div class="empty">${esc(MSG_LOADING)}</div>`;   // Feed noch nicht geladen / fehlgeschlagen
+}
+function updateOutletSections(info,outlets,matcher){   // offene Zeitung in-place auffrischen
+  outlets.forEach((o,i)=>{
+    const el=document.getElementById("outlet-"+i);if(!el)return;
+    for(const it of outletPicks(o,matcher))bumpMasthead(it.date);
+    el.innerHTML=`<div class="rname">${esc(o.name)}</div>`+outletInner(o,info,matcher);
+  });
+}
+async function retryFailedOutlets(info,key,outlets,matcher){   // fehlgeschlagene Quellen im Hintergrund weiter laden
+  const delays=[3000,5000,8000,12000,18000,30000];
+  for(const d of delays){
+    if(!outlets.some(o=>outletStatus(o)==="failed"))return;     // nichts mehr offen
+    await new Promise(r=>setTimeout(r,d));
+    if(currentCountryKey!==key)return;                          // Zeitung geschlossen/gewechselt
+    const jobs=[];
+    for(const o of outlets)if(outletStatus(o)==="failed")for(const f of o.feeds){
+      const c=feedCache.get(f);if(c&&!c.ok){feedCache.delete(f);jobs.push(loadFeedOnce(f,o.name));}
+    }
+    if(!jobs.length)continue;
+    await Promise.allSettled(jobs);
+    if(currentCountryKey!==key)return;
+    updateOutletSections(info,outlets,matcher);
+  }
+  if(currentCountryKey!==key)return;                            // Versuche ausgeschöpft: ehrlich kennzeichnen
+  outlets.forEach((o,i)=>{
+    if(outletStatus(o)!=="failed")return;
+    const el=document.getElementById("outlet-"+i);if(!el)return;
+    el.innerHTML=`<div class="rname">${esc(o.name)}</div><div class="empty">Aus dieser Quelle ließen sich gerade keine Meldungen laden (die kostenlosen Vermittler sind möglicherweise überlastet). Bitte die Seite neu laden oder den Google-News-Button unten nutzen.</div>`;
+  });
+}
+/* ---- Feeds neu laden (Button auf der Zeitungsseite, höchstens alle 3 Minuten) ---- */
+let reloadLockUntil=0,reloading=false;
+function refreshReloadBtn(){
+  const b=document.getElementById("reloadBtn");if(!b)return;
+  if(reloading){b.disabled=true;b.textContent="Lade neu …";return;}
+  const rem=Math.ceil((reloadLockUntil-Date.now())/1000);
+  if(rem>0){const m=Math.floor(rem/60),s=rem%60;b.disabled=true;b.textContent=`Erneut ladbar in ${m}:${String(s).padStart(2,"0")}`;}
+  else{b.disabled=false;b.textContent="⟳ Feeds neu laden";}
+}
+setInterval(refreshReloadBtn,1000);     // Countdown am Button mitlaufen lassen
+async function doReload(info,key,outlets,matcher,gnQuery){
+  const now=Date.now();
+  if(reloading||now<reloadLockUntil)return;     // Sperre: höchstens einmal alle 3 Minuten
+  reloadLockUntil=now+180000; reloading=true; refreshReloadBtn();
+  bgPause();                                    // Hintergrund anhalten: diese Region zuerst laden
+  try{
+    const feedJobs=[];                          // bisher geladene Beiträge bleiben sichtbar, kein Ladetext
+    for(const o of outlets)for(const f of o.feeds){
+      bgQueue=bgQueue.filter(q=>q.url!==f);     // aus der Warteschlange ziehen, jetzt direkt laden
+      // bereits geladen -> auffrischen (Altes bleibt bei Fehlschlag); noch nicht geladen -> jetzt laden
+      feedJobs.push(feedCache.has(f)?reloadFeed(f,o.name):loadFeedOnce(f,o.name));
+    }
+    const gnJob=gnFetchRaw(gnQuery).catch(()=>null);
+    await Promise.allSettled(feedJobs);
+    if(currentCountryKey===key)updateOutletSections(info,outlets,matcher);   // Neue ersetzen; wo der Abruf scheiterte, bleibt das Alte stehen
+    const gn=await gnJob;
+    if(currentCountryKey===key&&gn&&gn.length){
+      gnCache.set(gnQuery,{items:gn,ts:Date.now()});
+      const sec=document.getElementById("gnSec");
+      if(sec){const top=gn.sort((a,b)=>b.date-a.date).slice(0,8);for(const it of top)bumpMasthead(it.date);
+        sec.innerHTML=`<div class="rname">Google News</div>`+top.map(it=>artHtml(it,true)).join("");}
+    }
+  }finally{
+    bgResume();                                 // danach Hintergrund (andere Daten) fortsetzen
+    reloading=false; refreshReloadBtn();
+  }
+}
+async function renderPaperNews(info){
+  const key=info.key||info.de;
+  const isKreis=(info.key||"").startsWith("KR:");      // HNA nur auf Landkreis-Seiten
+  const isGermany=(info.key==="Germany"||info.de==="Deutschland");
+  const terms=[info.de,info.q];
+  if(isGermany)terms.push("Bundesregierung","Bundestag");   // deutsche Bundespolitik mit einbeziehen
+  const matcher=buildMatcher(terms);
+  const gnQuery=isGermany?(info.de+" OR Bundesregierung OR Bundestag"):(info.q||info.de);
+  const outlets=isKreis?OUTLETS.concat([HNA]):OUTLETS;
+  paperNewest=0;
+  bgPause();                                           // Hintergrund anhalten: erst diese Region laden, filtern UND anzeigen
+  try{
+    const gnPromise=fetchGoogleNews(gnQuery);          // Google News derselben Region parallel anstoßen
+    await ensureFeeds();                               // Zeitungs-Feeds dieser Region bevorzugt laden
+    if(currentCountryKey===key&&isKreis)await Promise.allSettled(HNA.feeds.map(f=>loadFeedOnce(f,HNA.name)));
+    if(currentCountryKey!==key)return;
+    const body=document.getElementById("paperBody");
+    if(!body)return;                                   // Zeitung geschlossen/gewechselt
+    const sections=outlets.map((o,i)=>{                // Beiträge dieser Region filtern und aufbereiten
+      for(const it of outletPicks(o,matcher))bumpMasthead(it.date);
+      return `<div class="ressort" id="outlet-${i}"><div class="rname">${esc(o.name)}</div>${outletInner(o,info,matcher)}</div>`;
+    }).join("");
+    const gnPlace=`<div class="ressort gnsec" id="gnSec"><div class="rname">Google News</div><div class="loadrow"><span class="mini"></span> Lade Google-News-Meldungen zu ${esc(info.de)} …</div></div>`;
+    const quellen="Tagesschau, Spiegel, Süddeutsche Zeitung, FAZ, Handelsblatt, taz, Neue Osnabrücker Zeitung"+(isKreis?", HNA":"")+", Google News";
+    body.innerHTML=`<div class="reloadbar"><button id="reloadBtn" class="reloadbtn" type="button">⟳ Feeds neu laden</button></div>
+      <div class="cols">${sections}</div>${gnPlace}
+      <div class="gnrow"><a class="gbtn" href="${esc(googleNewsUrl(info))}" target="_blank" rel="noopener noreferrer">Alle Meldungen zu ${esc(info.de)} bei Google News öffnen →</a></div>
+      <hr class="endrule"><div class="colophon">— Quellen: ${quellen} (RSS, neueste zuerst). Mit Klick öffnet sich der Originalartikel im neuen Tab. —</div>`;
+    const rbtn=document.getElementById("reloadBtn");
+    if(rbtn){rbtn.onclick=()=>doReload(info,key,outlets,matcher,gnQuery);refreshReloadBtn();}
+    // Zeitungs-Beiträge dieser Region sind jetzt geladen, gefiltert und angezeigt.
+    const gn=await gnPromise;                          // Google News derselben Region ergänzen
+    if(currentCountryKey===key){
+      const sec=document.getElementById("gnSec");
+      if(sec){
+        if(gn&&gn.length){const top=gn.sort((a,b)=>b.date-a.date).slice(0,8);for(const it of top)bumpMasthead(it.date);
+          sec.innerHTML=`<div class="rname">Google News</div>`+top.map(it=>artHtml(it,true)).join("");}
+        else sec.innerHTML=`<div class="rname">Google News</div><div class="empty">Ließ sich gerade nicht laden – bitte den Button unten nutzen.</div>`;
+      }
+    }
+  }finally{ bgResume(); }                              // ERST nach vollständiger Anzeige: Hintergrund (weitere Daten) fortsetzen
+  retryFailedOutlets(info,key,outlets,matcher);        // fehlgeschlagene Quellen danach im Hintergrund weiter laden
+}
+
+/* ============ Knöpfe ============ */
+const spinBtn=document.getElementById("spinBtn");
+function updateSpinBtn(){spinBtn.textContent=autoSpin?"⏸ Drehung":"▶ Drehung";}
+spinBtn.onclick=()=>{autoSpin=!autoSpin;updateSpinBtn();if(autoSpin)lastFrame=0;};
+document.getElementById("resetBtn").onclick=()=>{
+  rot=[-10,-18];projection.scale(R0);render();
+};
+
+/* ============ Laden der Geometrie ============ */
+const U10="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-10m.json";
+const U50="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
+const loader=document.getElementById("loader"),loadInfo=document.getElementById("loadInfo"),loadReady=document.getElementById("loadReady"),goBtn=document.getElementById("goBtn");
+
+function buildMeta(){
+  meta=(feats50||feats10).map(f=>{
+    const nm=f.properties.name;const entry=NAMES[nm];
+    let area=0,cen=[0,0];
+    try{area=d3.geoArea(f);cen=d3.geoCentroid(f);}catch(e){}
+    return {name:nm,area,centroid:cen,inert:!!(entry&&entry.inert),redirect:!!(entry&&entry.redirect)};
+  });
+}
+
+let t30=false,geomOk=false;
+function maybeReveal(){            // erst wenn 30s um UND Globus geladen
+  if(!(t30&&geomOk))return;
+  if(loadInfo)loadInfo.style.display="none";
+  if(loadReady)loadReady.style.display="block";
+  if(goBtn)goBtn.style.display="inline-block";
+}
+function startHourglass(){
+  setTimeout(()=>{t30=true;maybeReveal();},30000);
+  if(goBtn)goBtn.onclick=()=>{loader.style.opacity="0";setTimeout(()=>{loader.style.display="none";},420);};
+}
+/* Gedrosselte Hintergrund-Warteschlange: lädt Feeds schonend nach und lässt sich
+   kurz pausieren, damit eine gerade geöffnete Region bevorzugt geladen werden kann. */
+let bgQueue=[],bgActive=0,bgPauseDepth=0;
+const BG_CONC=3;
+function bgPump(){
+  if(bgPauseDepth>0)return;
+  while(bgActive<BG_CONC&&bgQueue.length){
+    const job=bgQueue.shift();
+    if(feedCache.has(job.url)||inflight.has(job.url))continue;   // schon geladen / läuft bereits
+    bgActive++;
+    loadFeedOnce(job.url,job.outlet).finally(()=>{bgActive--;bgPump();});
+  }
+}
+function bgPause(){bgPauseDepth++;}                              // Hintergrund anhalten (Zählung, robust bei Verschachtelung)
+function bgResume(){if(bgPauseDepth>0)bgPauseDepth--;if(bgPauseDepth===0)bgPump();}
+function prefetchFeeds(){          // alle Zeitungs-Feeds + HNA gedrosselt im Hintergrund laden
+  bgQueue=[];
+  for(const o of OUTLETS)for(const f of o.feeds)bgQueue.push({url:f,outlet:o.name});
+  for(const f of HNA.feeds)bgQueue.push({url:f,outlet:HNA.name});
+  bgPump();
+}
+/* (Das frühere massenhafte Google-News-Vorladen wurde entfernt: Es überlastete die
+   CORS-Vermittler. Google News wird jetzt pro Region beim Öffnen geladen – gleichzeitig
+   mit den Zeitungsinhalten.) */
+
+async function start(){
+  startHourglass();                 // 30-Sekunden-Fenster sofort starten
+  if(typeof d3==="undefined"||typeof topojson==="undefined"){
+    if(loadInfo)loadInfo.textContent="Die Kartenbibliotheken (d3/topojson) konnten nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.";return;
+  }
+  resize();
+  prefetchFeeds();                  // alle Zeitungs-Feeds + HNA sofort im Hintergrund laden
+  try{
+    const t50=await (await fetch(U50)).json();
+    feats50=topojson.feature(t50,t50.objects.countries).features;
+    buildMeta();scaleSet=false;resize();
+    geomOk=true;maybeReveal();
+  }catch(e){if(loadInfo)loadInfo.textContent="Die Weltkarte konnte nicht geladen werden. Bitte Verbindung prüfen und neu laden.";return;}
+}
+start();
+</script>
+</body>
+</html>
