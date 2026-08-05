@@ -65,31 +65,24 @@
   .credits{position:fixed;z-index:20;right:14px;bottom:12px;font-size:11px;color:#9a9183;
      text-align:right;line-height:1.4;max-width:46vw;}
   .credits a{color:#857c6e}
-  /* ---------- Ladeanzeige ---------- */
-  #loader{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
-     flex-direction:column;gap:16px;background:
+  /* ---------- Startbildschirm ---------- */
+  #splash{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+     flex-direction:column;gap:18px;background:
        radial-gradient(125% 125% at 50% 0%,#152549 0%,#0b1733 45%,#060d20 100%);
-     transition:opacity .5s ease;}
-  .spinner{width:46px;height:46px;border-radius:50%;border:4px solid #d9e2e7;
-     border-top-color:var(--accent2);animation:spin 1s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  #loader p{font-family:"Fredoka",sans-serif;color:#aab6d8;font-size:15px;margin:0;text-align:center;padding:0 20px;line-height:1.5}
-  #loadInfo,#loadReady{max-width:540px}
-  #loadReady{display:none;color:#ff6b5e;font-weight:600}
-  .hg{width:80px;height:116px;display:block;margin:6px auto}
-  .hg .glass{fill:none;stroke:#aebbe0;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
-  .hg .cap{fill:#aebbe0}
-  .hg .sand{fill:#e9c46a}
-  .hg .sand-top{transform-box:fill-box;transform-origin:50% 100%;animation:hgTop 30s linear forwards}
-  .hg .sand-bot{transform-box:fill-box;transform-origin:50% 100%;animation:hgBot 30s linear forwards}
-  .hg .stream{animation:hgStream 30s linear forwards}
-  @keyframes hgTop{from{transform:scaleY(1)}to{transform:scaleY(0)}}
-  @keyframes hgBot{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-  @keyframes hgStream{0%,3%{opacity:0}6%{opacity:1}94%{opacity:1}100%{opacity:0}}
-  #goBtn{display:none;margin-top:10px;border:none;cursor:pointer;
-     background:#1f9d57;color:#fff;font-family:"Fredoka",sans-serif;font-size:16px;font-weight:600;
-     padding:12px 28px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.45)}
-  #goBtn:hover{background:#23b365}
+     transition:opacity .55s ease;}
+  #splash.out{opacity:0;pointer-events:none}
+  .sglobe{width:clamp(96px,16vw,132px);height:auto;display:block;animation:splashIn .9s ease both}
+  .sglobe *{fill:none;stroke:#cfe0ff;stroke-width:2.4;stroke-linecap:round}
+  .sglobe .faint{stroke:#8fa3d4;stroke-width:1.8}
+  .stitle{font-family:"Fraunces","Spectral",Georgia,serif;font-weight:600;color:#eef2ff;
+     font-size:clamp(30px,7vw,54px);letter-spacing:.4px;text-align:center;line-height:1.08;
+     text-shadow:0 1px 18px rgba(4,8,20,.55);animation:splashIn .9s .12s ease both}
+  .sby{font-family:"Spectral";font-style:italic;color:#8194bd;font-size:clamp(12px,2vw,15px);
+     text-align:center;animation:splashIn .9s .24s ease both}
+  @keyframes splashIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  #geoErr{display:none;position:fixed;z-index:25;left:50%;top:50%;transform:translate(-50%,-50%);
+     max-width:520px;font-family:"Fredoka",sans-serif;color:#ffb4ab;font-size:15px;line-height:1.5;
+     text-align:center;padding:0 20px}
   /* ---------- Zeitung ---------- */
   #paperWrap{position:fixed;inset:0;z-index:40;display:none;align-items:flex-start;
      justify-content:center;overflow:auto;padding:28px 16px 48px;
@@ -185,27 +178,24 @@
   </div>
   <div class="hint"><b>Ziehen</b> zum Drehen · <b>Scrollen</b> / <b>Pinch</b> zum Zoomen · <b>Land antippen</b> für die Zeitung</div>
   <div class="credits">
-    Geodaten: Natural&nbsp;Earth / world-atlas (1:50&nbsp;Mio.) · Staatennamen: Auswärtiges&nbsp;Amt (Stand&nbsp;03/2024) · Nachrichten live über Google&nbsp;News
+    Geodaten: Natural&nbsp;Earth / world-atlas (1:50&nbsp;Mio.) · Staatennamen: Auswärtiges&nbsp;Amt (Stand&nbsp;03/2024) · Nachrichten: RSS der Verlage &amp; Google&nbsp;News, halbstündlich über GitHub&nbsp;Actions aktualisiert
   </div>
 
-  <div id="loader">
-    <p id="loadInfo">Ich lade gerade im Hintergrund die aktuellsten Nachrichten zu verschiedenen Regionen unserer Welt herunter. Gib mir einen Moment Zeit.</p>
-    <p id="loadReady">Die ersten Informationen zu den verschiedenen Regionen dieser Welt sind eingetroffen, allerdings längst noch nicht alle. Ich lade im Hintergrund weiter, während du schon einmal die Regionen dieser Welt erkunden kannst.</p>
-    <svg class="hg" viewBox="0 0 90 130" aria-hidden="true">
-      <defs>
-        <clipPath id="hgTopClip"><polygon points="20,20 70,20 45,63"/></clipPath>
-        <clipPath id="hgBotClip"><polygon points="45,67 70,110 20,110"/></clipPath>
-      </defs>
-      <rect class="cap" x="14" y="10" width="62" height="6" rx="3"/>
-      <rect class="cap" x="14" y="114" width="62" height="6" rx="3"/>
-      <g clip-path="url(#hgTopClip)"><rect class="sand sand-top" x="18" y="20" width="54" height="44"/></g>
-      <g clip-path="url(#hgBotClip)"><rect class="sand sand-bot" x="18" y="66" width="54" height="44"/></g>
-      <rect class="sand stream" x="43.5" y="60" width="3" height="12"/>
-      <polygon class="glass" points="20,20 70,20 45,65"/>
-      <polygon class="glass" points="45,65 70,110 20,110"/>
+  <div id="splash" aria-hidden="true">
+    <svg class="sglobe" viewBox="0 0 120 120">
+      <g transform="rotate(-14 60 60)">
+        <circle cx="60" cy="60" r="52"/>
+        <ellipse class="faint" cx="60" cy="60" rx="21" ry="52"/>
+        <ellipse class="faint" cx="60" cy="60" rx="40" ry="52"/>
+        <line x1="8" y1="60" x2="112" y2="60"/>
+        <line class="faint" x1="16.2" y1="32" x2="103.8" y2="32"/>
+        <line class="faint" x1="16.2" y1="88" x2="103.8" y2="88"/>
+      </g>
     </svg>
-    <button id="goBtn" type="button">Los geht's</button>
+    <div class="stitle">Merricks Globus</div>
+    <div class="sby">made by Jan-Rickmer Feindt</div>
   </div>
+  <div id="geoErr"></div>
 
   <div id="paperWrap" aria-modal="true" role="dialog"></div>
 
@@ -402,8 +392,14 @@ function highlightFeature(f){
 
 /* ---- Deutschland-Sonderfall: Bundesländer & Landkreise ---- */
 const DE_CENTER=[10.45,51.16];
-const DE_BL_URL="https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/2_bundeslaender/4_niedrig.geo.json";
-const DE_KR_URL="https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/4_kreise/4_niedrig.geo.json";
+const DE_BL_URLS=["https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/2_bundeslaender/4_niedrig.geo.json",
+                  "https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/main/2_bundeslaender/4_niedrig.geo.json"];
+const DE_KR_URLS=["https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/4_kreise/4_niedrig.geo.json",
+                  "https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/main/4_kreise/4_niedrig.geo.json"];
+async function fetchJsonFirst(urls){          // erste erreichbare Quelle gewinnt
+  for(const u of urls){try{const r=await fetch(u);if(r.ok)return await r.json();}catch(e){}}
+  throw new Error("keine Quelle erreichbar");
+}
 // Geografische Spannweiten (Bogenmaß) für die Sichtbarkeitsschwellen
 const DE_NS=7.8*Math.PI/180;        // Nord- bis Südgrenze Deutschlands (~47,3°–55,1°N)
 const FRDK_NS=15.45*Math.PI/180;    // Süd-Frankreich (~42,3°N) bis Nord-Dänemark (~57,75°N)
@@ -430,9 +426,9 @@ function maybeLoadDE(){
   if(!nearDE())return;
   const s=projection.scale();
   if(!deBL&&!deBLload){deBLload=true;            // Bundesländer früh laden (nur ~100 KB)
-    fetch(DE_BL_URL).then(r=>r.json()).then(j=>{deBL=j;render();}).catch(()=>{deBLload=false;});}
+    fetchJsonFirst(DE_BL_URLS).then(j=>{deBL=j;render();}).catch(()=>{deBLload=false;});}
   if(s>=krThreshold()*0.5&&!deKR&&!deKRload){deKRload=true;
-    fetch(DE_KR_URL).then(r=>r.json()).then(j=>{deKR=j;render();}).catch(()=>{deKRload=false;});}
+    fetchJsonFirst(DE_KR_URLS).then(j=>{deKR=j;render();}).catch(()=>{deKRload=false;});}
 }
 function krCore(n){return (n||"").replace(/\s+(Städte|Stadt|Landkreis|Kreis)$/,"").trim();}
 function subKey(f){const p=f.properties||{};return p.NAME_3?krCore(p.NAME_3):(p.name||"x");}
@@ -719,6 +715,7 @@ async function reloadFeed(url,outlet){     // Neu-laden: bei Fehlschlag alten Ca
   return false;                            // kein Überschreiben -> bisher geladene Beiträge bleiben sichtbar
 }
 async function ensureFeeds(){
+  if(localNewsOk)return;             // Zeitungsdaten kommen fertig aus dem Repository (halbstündlich frisch)
   const now=Date.now(),jobs=[];
   for(const o of OUTLETS)for(const f of o.feeds){
     const c=feedCache.get(f);
@@ -754,6 +751,7 @@ async function gnFetchRaw(q){                     // roher Abruf ohne Cache (lie
   return null;
 }
 function fetchGoogleNews(q){
+  if(gnPre.has(q))return Promise.resolve(gnPre.get(q));           // vorab geladen (NATO, Russland, China)
   const c=gnCache.get(q);
   if(c&&Date.now()-c.ts<600000)return Promise.resolve(c.items);   // 10 Min Cache
   if(gnInflight.has(q))return gnInflight.get(q);
@@ -807,15 +805,19 @@ function updateOutletSections(info,outlets,matcher){   // offene Zeitung in-plac
     el.innerHTML=`<div class="rname">${esc(o.name)}</div>`+outletInner(o,info,matcher);
   });
 }
-async function retryFailedOutlets(info,key,outlets,matcher){   // fehlgeschlagene Quellen im Hintergrund weiter laden
+async function retryFailedOutlets(info,key,outlets,matcher){   // fehlende/fehlgeschlagene Quellen im Hintergrund weiter laden
+  const open=o=>{const s=outletStatus(o);return s==="failed"||s==="pending";};
   const delays=[3000,5000,8000,12000,18000,30000];
   for(const d of delays){
-    if(!outlets.some(o=>outletStatus(o)==="failed"))return;     // nichts mehr offen
+    if(!outlets.some(open))return;                              // nichts mehr offen
     await new Promise(r=>setTimeout(r,d));
     if(currentCountryKey!==key)return;                          // Zeitung geschlossen/gewechselt
     const jobs=[];
-    for(const o of outlets)if(outletStatus(o)==="failed")for(const f of o.feeds){
-      const c=feedCache.get(f);if(c&&!c.ok){feedCache.delete(f);jobs.push(loadFeedOnce(f,o.name));}
+    for(const o of outlets)if(open(o))for(const f of o.feeds){
+      const c=feedCache.get(f);
+      if(c&&!c.ok){feedCache.delete(f);jobs.push(loadFeedOnce(f,o.name));}      // Fehlversuch erneut probieren
+      else if(!c&&!inflight.has(f))jobs.push(loadFeedOnce(f,o.name));           // noch gar nicht geladen
+      else if(inflight.has(f))jobs.push(inflight.get(f));                       // läuft gerade (Warteschlange) – Ergebnis abwarten
     }
     if(!jobs.length)continue;
     await Promise.allSettled(jobs);
@@ -824,9 +826,9 @@ async function retryFailedOutlets(info,key,outlets,matcher){   // fehlgeschlagen
   }
   if(currentCountryKey!==key)return;                            // Versuche ausgeschöpft: ehrlich kennzeichnen
   outlets.forEach((o,i)=>{
-    if(outletStatus(o)!=="failed")return;
+    if(!open(o))return;
     const el=document.getElementById("outlet-"+i);if(!el)return;
-    el.innerHTML=`<div class="rname">${esc(o.name)}</div><div class="empty">Aus dieser Quelle ließen sich gerade keine Meldungen laden (die kostenlosen Vermittler sind möglicherweise überlastet). Bitte die Seite neu laden oder den Google-News-Button unten nutzen.</div>`;
+    el.innerHTML=`<div class="rname">${esc(o.name)}</div><div class="empty">Aus dieser Quelle ließen sich gerade keine Meldungen laden. Bitte später den Knopf „Feeds neu laden" oder den Google-News-Button unten nutzen.</div>`;
   });
 }
 /* ---- Feeds neu laden (Button auf der Zeitungsseite, höchstens alle 3 Minuten) ---- */
@@ -845,20 +847,25 @@ async function doReload(info,key,outlets,matcher,gnQuery){
   reloadLockUntil=now+180000; reloading=true; refreshReloadBtn();
   bgPause();                                    // Hintergrund anhalten: diese Region zuerst laden
   try{
-    const feedJobs=[];                          // bisher geladene Beiträge bleiben sichtbar, kein Ladetext
-    for(const o of outlets)for(const f of o.feeds){
-      bgQueue=bgQueue.filter(q=>q.url!==f);     // aus der Warteschlange ziehen, jetzt direkt laden
-      // bereits geladen -> auffrischen (Altes bleibt bei Fehlschlag); noch nicht geladen -> jetzt laden
-      feedJobs.push(feedCache.has(f)?reloadFeed(f,o.name):loadFeedOnce(f,o.name));
+    if(localNewsOk){                            // Normalfall: frische JSON-Daten aus dem Repository holen
+      await Promise.allSettled([initLocalNews(),initLocalGnews()]);
+    }else{                                      // Reserve: direkt über die Vermittler auffrischen
+      const feedJobs=[];                        // bisher geladene Beiträge bleiben sichtbar, kein Ladetext
+      for(const o of outlets)for(const f of o.feeds){
+        bgQueue=bgQueue.filter(q=>q.url!==f);   // aus der Warteschlange ziehen, jetzt direkt laden
+        // bereits geladen -> auffrischen (Altes bleibt bei Fehlschlag); noch nicht geladen -> jetzt laden
+        feedJobs.push(feedCache.has(f)?reloadFeed(f,o.name):loadFeedOnce(f,o.name));
+      }
+      await Promise.allSettled(feedJobs);
     }
-    const gnJob=gnFetchRaw(gnQuery).catch(()=>null);
-    await Promise.allSettled(feedJobs);
     if(currentCountryKey===key)updateOutletSections(info,outlets,matcher);   // Neue ersetzen; wo der Abruf scheiterte, bleibt das Alte stehen
-    const gn=await gnJob;
+    let gn=null;
+    if(gnPre.has(gnQuery))gn=gnPre.get(gnQuery);          // vorab geladene Region: frisch aus gnews.json
+    else gn=await gnFetchRaw(gnQuery).catch(()=>null);    // sonst live nachladen
     if(currentCountryKey===key&&gn&&gn.length){
-      gnCache.set(gnQuery,{items:gn,ts:Date.now()});
+      if(!gnPre.has(gnQuery))gnCache.set(gnQuery,{items:gn,ts:Date.now()});
       const sec=document.getElementById("gnSec");
-      if(sec){const top=gn.sort((a,b)=>b.date-a.date).slice(0,8);for(const it of top)bumpMasthead(it.date);
+      if(sec){const top=gn.slice().sort((a,b)=>b.date-a.date).slice(0,8);for(const it of top)bumpMasthead(it.date);
         sec.innerHTML=`<div class="rname">Google News</div>`+top.map(it=>artHtml(it,true)).join("");}
     }
   }finally{
@@ -893,7 +900,7 @@ async function renderPaperNews(info){
     body.innerHTML=`<div class="reloadbar"><button id="reloadBtn" class="reloadbtn" type="button">⟳ Feeds neu laden</button></div>
       <div class="cols">${sections}</div>${gnPlace}
       <div class="gnrow"><a class="gbtn" href="${esc(googleNewsUrl(info))}" target="_blank" rel="noopener noreferrer">Alle Meldungen zu ${esc(info.de)} bei Google News öffnen →</a></div>
-      <hr class="endrule"><div class="colophon">— Quellen: ${quellen} (RSS, neueste zuerst). Mit Klick öffnet sich der Originalartikel im neuen Tab. —</div>`;
+      <hr class="endrule"><div class="colophon">— Quellen: ${quellen} (RSS, neueste zuerst). Mit Klick öffnet sich der Originalartikel im neuen Tab.${localNewsOk?" Datenstand: "+new Date(localGen).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr, halbstündlich aktualisiert.":""} —</div>`;
     const rbtn=document.getElementById("reloadBtn");
     if(rbtn){rbtn.onclick=()=>doReload(info,key,outlets,matcher,gnQuery);refreshReloadBtn();}
     // Zeitungs-Beiträge dieser Region sind jetzt geladen, gefiltert und angezeigt.
@@ -901,7 +908,7 @@ async function renderPaperNews(info){
     if(currentCountryKey===key){
       const sec=document.getElementById("gnSec");
       if(sec){
-        if(gn&&gn.length){const top=gn.sort((a,b)=>b.date-a.date).slice(0,8);for(const it of top)bumpMasthead(it.date);
+        if(gn&&gn.length){const top=gn.slice().sort((a,b)=>b.date-a.date).slice(0,8);for(const it of top)bumpMasthead(it.date);
           sec.innerHTML=`<div class="rname">Google News</div>`+top.map(it=>artHtml(it,true)).join("");}
         else sec.innerHTML=`<div class="rname">Google News</div><div class="empty">Ließ sich gerade nicht laden – bitte den Button unten nutzen.</div>`;
       }
@@ -921,7 +928,8 @@ document.getElementById("resetBtn").onclick=()=>{
 /* ============ Laden der Geometrie ============ */
 const U10="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-10m.json";
 const U50="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
-const loader=document.getElementById("loader"),loadInfo=document.getElementById("loadInfo"),loadReady=document.getElementById("loadReady"),goBtn=document.getElementById("goBtn");
+const splash=document.getElementById("splash"),geoErr=document.getElementById("geoErr");
+function showGeoErr(msg){if(geoErr){geoErr.textContent=msg;geoErr.style.display="block";}}
 
 function buildMeta(){
   meta=(feats50||feats10).map(f=>{
@@ -932,19 +940,9 @@ function buildMeta(){
   });
 }
 
-let t30=false,geomOk=false;
-function maybeReveal(){            // erst wenn 30s um UND Globus geladen
-  if(!(t30&&geomOk))return;
-  if(loadInfo)loadInfo.style.display="none";
-  if(loadReady)loadReady.style.display="block";
-  if(goBtn)goBtn.style.display="inline-block";
-}
-function startHourglass(){
-  setTimeout(()=>{t30=true;maybeReveal();},30000);
-  if(goBtn)goBtn.onclick=()=>{loader.style.opacity="0";setTimeout(()=>{loader.style.display="none";},420);};
-}
-/* Gedrosselte Hintergrund-Warteschlange: lädt Feeds schonend nach und lässt sich
-   kurz pausieren, damit eine gerade geöffnete Region bevorzugt geladen werden kann. */
+/* Gedrosselte Hintergrund-Warteschlange (Notfall-Reserve über CORS-Vermittler):
+   lädt Feeds schonend nach und lässt sich kurz pausieren, damit eine gerade
+   geöffnete Region bevorzugt geladen werden kann. */
 let bgQueue=[],bgActive=0,bgPauseDepth=0;
 const BG_CONC=3;
 function bgPump(){
@@ -958,29 +956,69 @@ function bgPump(){
 }
 function bgPause(){bgPauseDepth++;}                              // Hintergrund anhalten (Zählung, robust bei Verschachtelung)
 function bgResume(){if(bgPauseDepth>0)bgPauseDepth--;if(bgPauseDepth===0)bgPump();}
-function prefetchFeeds(){          // alle Zeitungs-Feeds + HNA gedrosselt im Hintergrund laden
-  bgQueue=[];
-  for(const o of OUTLETS)for(const f of o.feeds)bgQueue.push({url:f,outlet:o.name});
-  for(const f of HNA.feeds)bgQueue.push({url:f,outlet:HNA.name});
+function allFeedJobs(){
+  const jobs=[];
+  for(const o of OUTLETS)for(const f of o.feeds)jobs.push({url:f,outlet:o.name});
+  for(const f of HNA.feeds)jobs.push({url:f,outlet:HNA.name});
+  return jobs;
+}
+function prefetchFeeds(jobs){      // fehlende Feeds gedrosselt über Vermittler laden (Reserve)
+  bgQueue=jobs||allFeedJobs();
   bgPump();
 }
-/* (Das frühere massenhafte Google-News-Vorladen wurde entfernt: Es überlastete die
-   CORS-Vermittler. Google News wird jetzt pro Region beim Öffnen geladen – gleichzeitig
-   mit den Zeitungsinhalten.) */
+
+/* ============ Lokale Nachrichtendaten (von GitHub Actions erzeugt) ============
+   data/news.json und data/gnews.json liegen im selben Repository und werden
+   halbstündlich aktualisiert – kein CORS-Vermittler nötig. */
+let localNewsOk=false,localGen=0;
+const gnPre=new Map();             // vorab geladene Google-News-Regionen (Suchbegriff -> Beiträge)
+function cacheBuster(){return "?t="+Math.floor(Date.now()/60000);}
+async function initLocalNews(){
+  try{
+    const r=await fetch("data/news.json"+cacheBuster(),{cache:"no-store"});
+    if(!r.ok)throw 0;
+    const j=await r.json();
+    const feeds=j&&j.feeds?j.feeds:{};
+    const urls=Object.keys(feeds);
+    if(!urls.length)throw 0;
+    localGen=j.generated?(Date.parse(j.generated)||Date.now()):Date.now();
+    for(const u of urls){
+      const items=(feeds[u].items||[]).map(it=>({title:it.t||"",link:it.l||"",date:it.d||0,desc:it.s||""}));
+      feedCache.set(u,{items,ts:Date.now(),ok:true});
+    }
+    localNewsOk=true;
+    const missing=allFeedJobs().filter(j2=>!feedCache.has(j2.url));
+    if(missing.length)prefetchFeeds(missing);   // nur was serverseitig fehlte, über Vermittler nachholen
+  }catch(e){
+    localNewsOk=false;
+    prefetchFeeds();               // Rückfall: alles wie früher über Vermittler laden
+  }
+}
+async function initLocalGnews(){
+  try{
+    const r=await fetch("data/gnews.json"+cacheBuster(),{cache:"no-store"});
+    if(!r.ok)return;
+    const j=await r.json();
+    if(j&&j.regions)for(const q of Object.keys(j.regions)){
+      const items=(j.regions[q]||[]).map(it=>({title:it.t||"",link:it.l||"",date:it.d||0,desc:"",source:it.src||"Google News"}));
+      if(items.length)gnPre.set(q,items);
+    }
+  }catch(e){}
+}
 
 async function start(){
-  startHourglass();                 // 30-Sekunden-Fenster sofort starten
+  setTimeout(()=>{ if(splash){splash.classList.add("out");setTimeout(()=>splash.remove(),650);} },3000);   // Startbildschirm: 3 Sekunden
   if(typeof d3==="undefined"||typeof topojson==="undefined"){
-    if(loadInfo)loadInfo.textContent="Die Kartenbibliotheken (d3/topojson) konnten nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.";return;
+    showGeoErr("Die Kartenbibliotheken (d3/topojson) konnten nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.");return;
   }
   resize();
-  prefetchFeeds();                  // alle Zeitungs-Feeds + HNA sofort im Hintergrund laden
+  initLocalNews();                  // Zeitungsdaten aus dem Repository (schnell, gleiche Domain)
+  initLocalGnews();                 // vorab geladene Google-News-Regionen (NATO, Russland, China)
   try{
     const t50=await (await fetch(U50)).json();
     feats50=topojson.feature(t50,t50.objects.countries).features;
     buildMeta();scaleSet=false;resize();
-    geomOk=true;maybeReveal();
-  }catch(e){if(loadInfo)loadInfo.textContent="Die Weltkarte konnte nicht geladen werden. Bitte Verbindung prüfen und neu laden.";return;}
+  }catch(e){showGeoErr("Die Weltkarte konnte nicht geladen werden. Bitte Verbindung prüfen und neu laden.");return;}
 }
 start();
 </script>
