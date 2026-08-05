@@ -1,0 +1,33 @@
+name: Nachrichten aktualisieren
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"      # alle 30 Minuten (GitHub führt das je nach Last mit etwas Verzögerung aus)
+  workflow_dispatch:            # manueller Start über den Actions-Tab ("Run workflow")
+
+permissions:
+  contents: write               # damit der Lauf die JSON-Dateien einchecken darf
+
+concurrency:
+  group: nachrichten
+  cancel-in-progress: true      # überlappende Läufe vermeiden
+
+jobs:
+  aktualisieren:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Feeds und Google News abrufen
+        run: node fetch_news.mjs
+
+      - name: Neue Daten einchecken
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --staged --quiet || (git commit -m "Nachrichten aktualisiert" && git push)
