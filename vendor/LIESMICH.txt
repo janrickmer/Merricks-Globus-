@@ -1,0 +1,53 @@
+Merricks Globus – lokale Bibliotheken und Kartendaten (vendor/)
+================================================================
+
+Die Seite (index.html) lädt diese Dateien über relative Pfade vom eigenen Server.
+Es gibt dafür keine Verbindung zu cdn.jsdelivr.net oder raw.githubusercontent.com mehr.
+Alle Dateien sind unverändert aus den genannten Quellen übernommen (abgerufen am 13.10.2026).
+
+
+1. d3 – Version 7.9.0
+   Datei:    d3/d3.min.js  (= dist/d3.min.js aus dem npm-Paket)
+   Quelle:   npm-Registry, https://registry.npmjs.org/d3/-/d3-7.9.0.tgz
+             (SHA-1 des Pakets laut Registry: 579e7acb3d749caf8860bd1741ae8d371070cd5d)
+   Lizenz:   ISC, Copyright 2010-2023 Mike Bostock – Lizenztext: d3/LICENSE (aus dem Paket)
+
+2. topojson-client – Version 3.1.0
+   Datei:    topojson-client/topojson-client.min.js  (= dist/topojson-client.min.js aus dem npm-Paket)
+   Quelle:   npm-Registry, https://registry.npmjs.org/topojson-client/-/topojson-client-3.1.0.tgz
+             (SHA-1 des Pakets laut Registry: 22e8b1ed08a2b922feeb4af6f53b6ef09a467b99)
+   Lizenz:   ISC, Copyright 2012-2019 Michael Bostock – Lizenztext: topojson-client/LICENSE (aus dem Paket)
+
+3. world-atlas – Version 2.0.2
+   Datei:    world-atlas/countries-50m.json  (aus dem npm-Paket)
+   Quelle:   npm-Registry, https://registry.npmjs.org/world-atlas/-/world-atlas-2.0.2.tgz
+             (SHA-1 des Pakets laut Registry: 4bca4a578f3a413bd409c3f07f2054fe7375824f)
+   Lizenz:   ISC, Copyright 2013-2019 Michael Bostock – Lizenztext: world-atlas/LICENSE (aus dem Paket)
+   Daten:    laut README des Pakets Natural Earth, Version 4.1.0 (Admin 0 – Country boundaries, 1:50m).
+             Natural Earth ist gemeinfrei („public domain“), siehe
+             https://github.com/nvkelso/natural-earth-vector/blob/master/LICENSE.md
+   Hinweis:  countries-10m.json wird von der Seite nicht verwendet und ist deshalb nicht enthalten.
+
+4. deutschlandGeoJSON (GitHub: isellsoap/deutschlandGeoJSON, Repository archiviert)
+   Stand:    Commit 4090d4e1f89c1184b436b3d9ccaf332b4c5b43d2 (Branch main)
+   Dateien:  deutschlandGeoJSON/2_bundeslaender/4_niedrig.geo.json  (Bundesländer)
+             deutschlandGeoJSON/4_kreise/4_niedrig.geo.json         (Landkreise und kreisfreie Städte)
+   Quelle:   https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/4090d4e1f89c1184b436b3d9ccaf332b4c5b43d2/2_bundeslaender/4_niedrig.geo.json
+             https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/4090d4e1f89c1184b436b3d9ccaf332b4c5b43d2/4_kreise/4_niedrig.geo.json
+   Lizenz:   The Unlicense (gemeinfrei) – Lizenztext: deutschlandGeoJSON/LICENSE.md (aus dem Repository)
+   Daten:    laut README des Repositorys aus GIS-DATA (http://www.diva-gis.org/gdata), bearbeitet mit Quantum GIS.
+
+
+Prüfsummen (SHA-256)
+--------------------
+f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539  d3/d3.min.js
+3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4  d3/LICENSE
+25cd02ae486cc5063e0215a4e4cfb15de83700c87ac48bac4d57dc6aaf3ebb89  topojson-client/topojson-client.min.js
+4c4d15b635e04e691825a76db7d33f7f2033b55669a7430011694f31e6c65999  topojson-client/LICENSE
+04342cdc1e3016bcd7db1630de95684d67b79fe3c8c460321e87aef469502394  world-atlas/countries-50m.json
+8048290dfdb6e83fbed17e8985c8cfc4ce9da9b842642f3d3e497280790cfa31  world-atlas/LICENSE
+9d5f5b14b48e262d2ce916cf7ab249f1342196e4dd0fde55a0af6132f995a54f  deutschlandGeoJSON/2_bundeslaender/4_niedrig.geo.json
+50eda29377a1d22d66927b56006a7f05276589660e203742566dc1e029bf0bec  deutschlandGeoJSON/4_kreise/4_niedrig.geo.json
+6b0382b16279f26ff69014300541967a356a666eb0b91b422f6862f6b7dad17e  deutschlandGeoJSON/LICENSE.md
+
+Prüfen (im Ordner vendor/): sha256sum -c lässt sich mit den Zeilen oben ausführen.

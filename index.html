@@ -159,6 +159,10 @@
   .nohits{font-family:"Spectral";font-size:13.5px;line-height:1.5;color:#5a5246;background:#f4eee0;
      border:1px solid #e4ddcf;border-radius:6px;padding:11px 14px;margin:8px 0 2px}
   .gnrow{text-align:center;margin:22px 0 4px}
+  .proxyask{font-family:"Spectral";font-size:13.5px;line-height:1.5;color:#5a5246;background:#f4eee0;
+     border:1px solid #e4ddcf;border-radius:6px;padding:11px 14px;margin:8px 0 2px}
+  .proxyask p{margin:0 0 10px}
+  .proxyask a{color:#857c6e}
   .gnsec{margin-top:6px;border-top:1px dashed #d8d0bf;padding-top:14px}
   .gnsec .rname{color:var(--accent)}
   .skel{height:14px;background:linear-gradient(90deg,#ece5d6,#f5efe2,#ece5d6);
@@ -222,8 +226,8 @@
 
   <div id="paperWrap" aria-modal="true" role="dialog"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script src="vendor/d3/d3.min.js"></script>
+<script src="vendor/topojson-client/topojson-client.min.js"></script>
 <script>
 "use strict";
 /* ============ Datensätze (eingespielt beim Bau) ============ */
@@ -415,10 +419,8 @@ function highlightFeature(f){
 
 /* ---- Deutschland-Sonderfall: Bundesländer & Landkreise ---- */
 const DE_CENTER=[10.45,51.16];
-const DE_BL_URLS=["https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/2_bundeslaender/4_niedrig.geo.json",
-                  "https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/main/2_bundeslaender/4_niedrig.geo.json"];
-const DE_KR_URLS=["https://cdn.jsdelivr.net/gh/isellsoap/deutschlandGeoJSON@main/4_kreise/4_niedrig.geo.json",
-                  "https://raw.githubusercontent.com/isellsoap/deutschlandGeoJSON/main/4_kreise/4_niedrig.geo.json"];
+const DE_BL_URLS=["vendor/deutschlandGeoJSON/2_bundeslaender/4_niedrig.geo.json"];   // lokal, siehe vendor/LIESMICH.txt
+const DE_KR_URLS=["vendor/deutschlandGeoJSON/4_kreise/4_niedrig.geo.json"];
 async function fetchJsonFirst(urls){          // erste erreichbare Quelle gewinnt
   for(const u of urls){try{const r=await fetch(u);if(r.ok)return await r.json();}catch(e){}}
   throw new Error("keine Quelle erreichbar");
@@ -696,6 +698,18 @@ function parseFeed(xml,outlet){
     return {title:stripHtml(g("title")),link:(g("link")||"").trim(),date:isNaN(t)?0:t.getTime(),desc:stripHtml(desc),source:outlet};
   });
 }
+/* Öffentliche Weiterleitungsdienste (FETCHERS) nur nach ausdrücklichem Klick („Weitere Meldungen … laden“);
+   die Entscheidung gilt nur für die laufende Seite (Arbeitsspeicher, keine Speicherung im Browser). */
+let proxyConsent=false,pendingJobs=[];
+const PROXY_NOTE='Dafür fragt Ihr Browser öffentliche Weiterleitungsdienste ab (api.allorigins.win, api.codetabs.com, corsproxy.io). '+
+  'Diese erhalten Ihre IP-Adresse und die Anfrage, zum Beispiel den Namen der Region; wer sie betreibt und wo ihre Server stehen, '+
+  'ist nicht bekannt, eine Verarbeitung außerhalb der EU ist möglich – auch in Ländern ohne angemessenes Datenschutzniveau, '+
+  'wo gleichwertige Schutzgarantien fehlen und Behörden womöglich zugreifen können. Ihre Zustimmung gilt bis zum Schließen oder '+
+  'Neuladen der Seite, auch für weitere Regionen und fehlende Zeitungsmeldungen. '+
+  '<a href="impressum.html#datenschutz" target="_blank" rel="noopener">Impressum &amp; Datenschutz</a>';
+function proxyAskHtml(text,label){
+  return `<div class="proxyask"><p>${esc(text)} ${PROXY_NOTE}</p><button class="reloadbtn proxybtn" type="button">${esc(label)}</button></div>`;
+}
 const FETCHERS=rss=>[
   {u:`https://api.allorigins.win/get?url=${encodeURIComponent(rss)}`,json:true},
   {u:`https://api.allorigins.win/raw?url=${encodeURIComponent(rss)}`},
@@ -703,6 +717,7 @@ const FETCHERS=rss=>[
   {u:`https://corsproxy.io/?url=${encodeURIComponent(rss)}`}
 ];
 async function loadFeed(url,outlet){
+  if(!proxyConsent)return false;          // ohne Zustimmung keine Weiterleitungsdienste
   for(const t of FETCHERS(url)){
     try{
       const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
@@ -724,6 +739,7 @@ function loadFeedOnce(url,outlet){
   inflight.set(url,p);return p;
 }
 async function reloadFeed(url,outlet){     // Neu-laden: bei Fehlschlag alten Cache (alte Beiträge) BEHALTEN
+  if(!proxyConsent)return false;
   for(const t of FETCHERS(url)){
     try{
       const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
@@ -751,6 +767,7 @@ async function ensureFeeds(){
 /* Google-News-Meldungen zur Region per RSS */
 const gnCache=new Map(),gnInflight=new Map();   // Google-News-Ergebnisse pro Region zwischenspeichern
 async function gnFetchRaw(q){                     // roher Abruf ohne Cache (liefert Array oder null)
+  if(!proxyConsent)return null;
   const rss=`https://news.google.com/rss/search?q=${encodeURIComponent(q+" when:1y")}&hl=de&gl=DE&ceid=DE:de`;
   for(const t of FETCHERS(rss)){
     try{
@@ -791,10 +808,15 @@ function outletItems(o){
 }
 function fmtDate(ms){if(!ms)return"";const x=new Date(ms);if(isNaN(x))return"";
   return x.toLocaleDateString("de-DE",{day:"numeric",month:"short"})+", "+x.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr";}
+function safeUrl(u){                 // nur absolute http(s)-Adressen aus Feeds übernehmen (kein javascript: o. Ä.)
+  try{const p=new URL(String(u||""));return (p.protocol==="http:"||p.protocol==="https:")?p.href:"";}catch(e){return "";}
+}
 function artHtml(it,showSource){
   const snip=it.desc?`<div class="snip">${esc(it.desc.slice(0,200))}${it.desc.length>200?"…":""}</div>`:"";
   const meta=((showSource&&it.source)?esc(it.source)+" · ":"")+esc(fmtDate(it.date));
-  return `<article class="art"><h3><a href="${esc(it.link)}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a></h3><div class="meta">${meta}</div>${snip}</article>`;
+  const u=safeUrl(it.link);
+  const head=u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(it.title)}</a>`:esc(it.title);
+  return `<article class="art"><h3>${head}</h3><div class="meta">${meta}</div>${snip}</article>`;
 }
 function setMastheadDate(ts){
   if(!(ts>0))return;
@@ -819,6 +841,7 @@ function outletInner(o,info,matcher){
   if(items.length)return items.map(it=>artHtml(it,false)).join("");
   if(outletStatus(o)==="data")        // Feed geladen, aber zu dieser Region nichts gefunden
     return `<div class="empty">Zurzeit liegt aus dieser Quelle keine Meldung zu ${esc(info.de)} vor.</div>`;
+  if(!proxyConsent)return `<div class="empty">Aus dieser Quelle liegen auf diesem Server gerade keine Meldungen zu ${esc(info.de)} vor.</div>`;
   return `<div class="empty">${esc(MSG_LOADING)}</div>`;   // Feed noch nicht geladen / fehlgeschlagen
 }
 function updateOutletSections(info,outlets,matcher){   // offene Zeitung in-place auffrischen
@@ -829,6 +852,7 @@ function updateOutletSections(info,outlets,matcher){   // offene Zeitung in-plac
   });
 }
 async function retryFailedOutlets(info,key,outlets,matcher){   // fehlende/fehlgeschlagene Quellen im Hintergrund weiter laden
+  if(!proxyConsent)return;                                    // nur mit Zustimmung über Weiterleitungsdienste
   const open=o=>{const s=outletStatus(o);return s==="failed"||s==="pending";};
   const delays=[3000,5000,8000,12000,18000,30000];
   for(const d of delays){
@@ -906,6 +930,8 @@ async function renderPaperNews(info){
   const gnQuery=isGermany?(info.de+" OR Bundesregierung OR Bundestag"):(info.q||info.de);
   const outlets=isKreis?OUTLETS.concat([HNA]):OUTLETS;
   paperNewest=0;
+  await Promise.allSettled([localNewsP,localGnP]);     // erst wissen, was dieser Server vorbereitet hat
+  if(currentCountryKey!==key)return;
   bgPause();                                           // Hintergrund anhalten: erst diese Region laden, filtern UND anzeigen
   try{
     const gnPromise=fetchGoogleNews(gnQuery);          // Google News derselben Region parallel anstoßen
@@ -918,17 +944,28 @@ async function renderPaperNews(info){
       for(const it of outletPicks(o,matcher))bumpMasthead(it.date);
       return `<div class="ressort" id="outlet-${i}"><div class="rname">${esc(o.name)}</div>${outletInner(o,info,matcher)}</div>`;
     }).join("");
-    const gnPlace=`<div class="ressort gnsec" id="gnSec"><div class="rname">Google News</div><div class="loadrow"><span class="mini"></span> Lade Google-News-Meldungen zu ${esc(info.de)} …</div></div>`;
+    const needGn=!gnPre.has(gnQuery)&&!gnCache.has(gnQuery);
+    const needFeeds=outlets.some(o=>outletStatus(o)!=="data");
+    const gnPlace=(!proxyConsent&&needGn)
+      ?`<div class="ressort gnsec" id="gnSec"><div class="rname">Google News</div>${proxyAskHtml(`Für ${info.de} liegen auf diesem Server keine vorbereiteten Google-News-Meldungen vor.`+(needFeeds?" Aus einzelnen Zeitungen fehlen außerdem Meldungen.":""),needFeeds?"Google News und fehlende Zeitungsmeldungen über externe Dienste laden":"Weitere Meldungen über Google News laden (externer Dienst)")}</div>`
+      :`<div class="ressort gnsec" id="gnSec"><div class="rname">Google News</div><div class="loadrow"><span class="mini"></span> Lade Google-News-Meldungen zu ${esc(info.de)} …</div></div>`;
+    const feedsAsk=(!proxyConsent&&needFeeds&&!needGn)
+      ?proxyAskHtml("Aus einzelnen Quellen liegen auf diesem Server gerade keine Meldungen vor.","Fehlende Meldungen über externe Dienste laden"):"";
     const quellen="Tagesschau, Spiegel, Süddeutsche Zeitung, FAZ, Handelsblatt, taz, Neue Osnabrücker Zeitung"+(isKreis?", HNA":"")+", Google News";
     body.innerHTML=`<div class="reloadbar"><button id="reloadBtn" class="reloadbtn" type="button">⟳ Feeds neu laden</button></div>
-      <div class="cols">${sections}</div>${gnPlace}
+      <div class="cols">${sections}</div>${feedsAsk}${gnPlace}
       <div class="gnrow"><a class="gbtn" href="${esc(googleNewsUrl(info))}" target="_blank" rel="noopener noreferrer">Alle Meldungen zu ${esc(info.de)} bei Google News öffnen →</a></div>
       <hr class="endrule"><div class="colophon">— Quellen: ${quellen} (RSS, neueste zuerst). Mit Klick öffnet sich der Originalartikel im neuen Tab.${localNewsOk?" Datenstand: "+new Date(localGen).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr, halbstündlich aktualisiert.":""} —</div>`;
     const rbtn=document.getElementById("reloadBtn");
-    if(rbtn){rbtn.onclick=()=>doReload(info,key,outlets,matcher,gnQuery);refreshReloadBtn();}
+    if(rbtn){rbtn.onclick=()=>doReload(info,key,outlets,matcher,gnQuery);rbtn.title="Lädt die Nachrichten dieses Servers neu; nach Ihrer Zustimmung („… über … laden“) auch über öffentliche Weiterleitungsdienste.";refreshReloadBtn();}
+    body.querySelectorAll(".proxybtn").forEach(b=>{b.onclick=()=>{   // Zustimmung: ab jetzt (nur auf dieser Seite) Weiterleitungsdienste nutzen
+      proxyConsent=true;
+      if(pendingJobs.length){const j=pendingJobs;pendingJobs=[];prefetchFeeds(j);}
+      renderPaperNews(info);
+    };});
     // Zeitungs-Beiträge dieser Region sind jetzt geladen, gefiltert und angezeigt.
     const gn=await gnPromise;                          // Google News derselben Region ergänzen
-    if(currentCountryKey===key){
+    if(currentCountryKey===key&&!(!proxyConsent&&needGn)){
       const sec=document.getElementById("gnSec");
       if(sec){
         if(gn&&gn.length){const top=gn.slice().sort((a,b)=>b.date-a.date).slice(0,8);for(const it of top)bumpMasthead(it.date);
@@ -949,8 +986,7 @@ document.getElementById("resetBtn").onclick=()=>{
 };
 
 /* ============ Laden der Geometrie ============ */
-const U10="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-10m.json";
-const U50="https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
+const U50="vendor/world-atlas/countries-50m.json";   // lokal, siehe vendor/LIESMICH.txt
 const splash=document.getElementById("splash"),geoErr=document.getElementById("geoErr");
 function showGeoErr(msg){if(geoErr){geoErr.textContent=msg;geoErr.style.display="block";}}
 
@@ -986,6 +1022,7 @@ function allFeedJobs(){
   return jobs;
 }
 function prefetchFeeds(jobs){      // fehlende Feeds gedrosselt über Vermittler laden (Reserve)
+  if(!proxyConsent){pendingJobs=jobs||allFeedJobs();return;}   // erst nach Zustimmung
   bgQueue=jobs||allFeedJobs();
   bgPump();
 }
@@ -993,7 +1030,7 @@ function prefetchFeeds(jobs){      // fehlende Feeds gedrosselt über Vermittler
 /* ============ Lokale Nachrichtendaten (von GitHub Actions erzeugt) ============
    data/news.json und data/gnews.json liegen im selben Repository und werden
    halbstündlich aktualisiert – kein CORS-Vermittler nötig. */
-let localNewsOk=false,localGen=0;
+let localNewsOk=false,localGen=0,localNewsP=null,localGnP=null;
 const gnPre=new Map();             // vorab geladene Google-News-Regionen (Suchbegriff -> Beiträge)
 function cacheBuster(){return "?t="+Math.floor(Date.now()/60000);}
 async function initLocalNews(){
@@ -1035,8 +1072,8 @@ async function start(){
     showGeoErr("Die Kartenbibliotheken (d3/topojson) konnten nicht geladen werden. Bitte Internetverbindung prüfen und neu laden.");return;
   }
   resize();
-  initLocalNews();                  // Zeitungsdaten aus dem Repository (schnell, gleiche Domain)
-  initLocalGnews();                 // vorab geladene Google-News-Regionen (NATO, Russland, China)
+  localNewsP=initLocalNews();       // Zeitungsdaten aus dem Repository (schnell, gleiche Domain)
+  localGnP=initLocalGnews();        // vorab geladene Google-News-Regionen (NATO, Russland, China, Hessen, Kassel)
   try{
     const t50=await (await fetch(U50)).json();
     feats50=topojson.feature(t50,t50.objects.countries).features;
